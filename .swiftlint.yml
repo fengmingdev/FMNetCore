@@ -1,0 +1,50 @@
+# SwiftLint 配置文件
+
+# 基本规则
+disabled_rules:
+  - force_cast
+  - force_try
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - todo
+  - line_length
+  - type_body_length
+  - file_length
+  - cyclomatic_complexity
+  - function_body_length
+
+# 规则配置
+identifier_name:
+  excluded:
+    - id
+    - URL
+    - url
+    - GlobalAPIKey
+
+# 文件长度限制
+file_length:
+  warning: 500
+  error: 800
+
+# 函数体长度限制
+function_body_length:
+  warning: 100
+  error: 200
+
+# 循环复杂度限制
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+# 行长度限制
+line_length:
+  warning: 150
+  error: 200
+
+# 类型体长度限制
+type_body_length:
+  warning: 300
+  error: 500
+
+# 报告器类型
+reporter: "xcode"
