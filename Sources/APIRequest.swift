@@ -10,7 +10,7 @@ import Moya
 
 /// API请求协议
 /// 定义网络请求的接口规范，所有网络请求都应该实现此协议
-protocol APIRequest {
+public protocol APIRequest {
     /// 对应的Moya TargetType
     associatedtype Target: TargetType
     
@@ -32,7 +32,7 @@ protocol APIRequest {
 }
 
 /// APIRequest协议的默认实现
-extension APIRequest {
+public extension APIRequest {
     /// 请求超时时间（可选，默认使用全局配置）
     var timeoutInterval: TimeInterval? { return nil }
     

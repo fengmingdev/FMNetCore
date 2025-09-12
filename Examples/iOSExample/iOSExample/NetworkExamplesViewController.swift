@@ -6,11 +6,14 @@
 //
 
 import UIKit
+import FMNetCore
+import Combine
 
 class NetworkExamplesViewController: UIViewController {
     
     private var tableView: UITableView!
     private var examples: [Example] = []
+    private var cancellables = Set<AnyCancellable>()
     
     struct Example {
         let title: String
@@ -240,22 +243,28 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "动态Base URL", message: "正在使用动态Base URL获取用户信息...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
                     }
+                },
+                receiveValue: { [weak self] (user: User) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)\n使用动态Base URL获取")
+                    }
+                    
+                    // 清除动态Base URL
+                    DynamicBaseURLManager.shared.removeDynamicBaseURL(for: "userAPI")
                 }
-                
-                // 清除动态Base URL
-                DynamicBaseURLManager.shared.removeDynamicBaseURL(for: "userAPI")
-            }, receiveValue: { (user: User) in
-                DispatchQueue.main.async {
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)\n使用动态Base URL获取")
-                }
-            })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 代理配置示例
@@ -305,18 +314,25 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取用户信息（带缓存）...")
         
-        let taskId = NetworkManager.shared.requestWithLoading(request, useCache: true) { (result: Result<User, Error>) in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let user):
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)")
-                case .failure(let error):
-                    self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request, useCache: true)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                },
+                receiveValue: { [weak self] (user: User) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)")
+                    }
                 }
-            }
-        }
-        
-        print("用户请求任务ID: \(taskId)")
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 单个请求（无缓存）
@@ -325,19 +341,25 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取用户信息（无缓存）...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                },
+                receiveValue: { [weak self] (user: User) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)")
                     }
                 }
-            }, receiveValue: { (user: User) in
-                DispatchQueue.main.async {
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)")
-                }
-            })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 组合请求（带缓存）
@@ -347,18 +369,28 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取用户和帖子信息（带缓存）...")
         
-        let taskId = NetworkManager.shared.combinedRequest(userRequest, postRequest, useCache: true) { (result: Result<(User, Post), Error>) in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let (user, post)):
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)")
-                case .failure(let error):
-                    self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
-                }
-            }
-        }
+        let userPublisher: AnyPublisher<User, NetworkError> = NetworkManager.shared.request(userRequest, useCache: true)
+        let postPublisher: AnyPublisher<Post, NetworkError> = NetworkManager.shared.request(postRequest, useCache: true)
         
-        print("组合请求任务ID: \(taskId)")
+        Publishers.Zip(userPublisher, postPublisher)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                },
+                receiveValue: { [weak self] (user: User, post: Post) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)")
+                    }
+                }
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 组合请求（无缓存）
@@ -368,19 +400,28 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取用户和帖子信息（无缓存）...")
         
-        NetworkManager.shared.combinedRequest(userRequest, postRequest)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        let userPublisher: AnyPublisher<User, NetworkError> = NetworkManager.shared.request(userRequest)
+        let postPublisher: AnyPublisher<Post, NetworkError> = NetworkManager.shared.request(postRequest)
+        
+        Publishers.Zip(userPublisher, postPublisher)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                },
+                receiveValue: { [weak self] (user: User, post: Post) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)")
                     }
                 }
-            }, receiveValue: { (user: User, post: Post) in
-                DispatchQueue.main.async {
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)")
-                }
-            })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 三个请求组合
@@ -391,19 +432,29 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取用户、帖子和用户列表...")
         
-        NetworkManager.shared.combinedRequest(userRequest, postRequest, usersRequest)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        let userPublisher: AnyPublisher<User, NetworkError> = NetworkManager.shared.request(userRequest)
+        let postPublisher: AnyPublisher<Post, NetworkError> = NetworkManager.shared.request(postRequest)
+        let usersPublisher: AnyPublisher<[User], NetworkError> = NetworkManager.shared.request(usersRequest)
+        
+        Publishers.Zip3(userPublisher, postPublisher, usersPublisher)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                },
+                receiveValue: { [weak self] (user: User, post: Post, users: [User]) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)\n用户总数: \(users.count)")
                     }
                 }
-            }, receiveValue: { (user: User, post: Post, users: [User]) in
-                DispatchQueue.main.async {
-                    self.showAlert(title: "成功", message: "用户名: \(user.name)\n帖子标题: \(post.title)\n用户总数: \(users.count)")
-                }
-            })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 错误处理演示
@@ -423,28 +474,33 @@ class NetworkExamplesViewController: UIViewController {
         
         showAlert(title: "请求开始", message: "正在获取不存在的用户信息...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    switch completion {
-                    case .finished:
-                        self.showAlert(title: "完成", message: "请求已完成")
-                    case .failure(let error):
-                        // 直接处理NetworkError，因为request方法返回的就是NetworkError
-                        switch error {
-                        case .httpError(let code):
-                            self.showAlert(title: "HTTP错误", message: "状态码: \(code)")
-                        case .networkUnreachable:
-                            self.showAlert(title: "网络错误", message: "网络不可达")
-                        case .timeout:
-                            self.showAlert(title: "超时错误", message: "请求超时")
-                        default:
-                            self.showAlert(title: "其他错误", message: "错误类型: \(error)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            // 直接处理NetworkError，因为request方法返回的就是NetworkError
+                            switch error {
+                            case .httpError(let code):
+                                self?.showAlert(title: "HTTP错误", message: "状态码: \(code)")
+                            case .networkUnreachable:
+                                self?.showAlert(title: "网络错误", message: "网络不可达")
+                            case .timeout:
+                                self?.showAlert(title: "超时错误", message: "请求超时")
+                            default:
+                                self?.showAlert(title: "其他错误", message: "错误类型: \(error)")
+                            }
                         }
                     }
+                },
+                receiveValue: { [weak self] (_: User) in
+                    // 不需要处理成功的情况，因为请求会失败
                 }
-            }, receiveValue: { (_: User) in })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 弱网环境模拟
@@ -464,28 +520,34 @@ class NetworkExamplesViewController: UIViewController {
         let request = WeakNetworkRequest()
         
         // 模拟弱网环境
-        ReachabilityManager.shared.networkStatus = .cellular(quality: .poor)
+        // 注意：我们不能直接设置networkStatus，因为它是只读的
+        // 我们需要通过其他方式模拟弱网环境
         
         showAlert(title: "弱网环境", message: "正在模拟弱网环境下的请求...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        // 直接处理NetworkError，因为request方法返回的就是NetworkError
-                        switch error {
-                        case .weakNetworkNotAllowed:
-                            self.showAlert(title: "弱网限制", message: "当前为弱网环境，请求被拒绝")
-                        default:
-                            self.showAlert(title: "错误", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            // 直接处理NetworkError，因为request方法返回的就是NetworkError
+                            switch error {
+                            case .weakNetworkNotAllowed:
+                                self?.showAlert(title: "弱网限制", message: "当前为弱网环境，请求被拒绝")
+                            default:
+                                self?.showAlert(title: "错误", message: "错误: \(error.localizedDescription)")
+                            }
                         }
                     }
+                },
+                receiveValue: { [weak self] (_: User) in
+                    // 不需要处理成功的情况
                 }
-                
-                // 恢复网络状态
-                ReachabilityManager.shared.networkStatus = .wifi
-            }, receiveValue: { (_: User) in })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 弱网环境下允许请求的示例
@@ -505,25 +567,27 @@ class NetworkExamplesViewController: UIViewController {
         let request = WeakNetworkAllowedRequest()
         
         // 模拟弱网环境
-        ReachabilityManager.shared.networkStatus = .cellular(quality: .poor)
+        // 注意：我们不能直接设置networkStatus，因为它是只读的
         
         showAlert(title: "弱网环境（允许请求）", message: "正在弱网环境下发送允许的请求...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    switch completion {
-                    case .finished:
-                        self.showAlert(title: "成功", message: "在弱网环境下成功发送了允许的请求")
-                    case .failure(let error):
-                        self.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "成功", message: "在弱网环境下成功发送了允许的请求")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
                     }
+                },
+                receiveValue: { [weak self] (_: User) in
+                    // 不需要处理成功的情况
                 }
-                
-                // 恢复网络状态
-                ReachabilityManager.shared.networkStatus = .wifi
-            }, receiveValue: { (_: User) in })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     /// 弱网环境下不允许请求的示例
@@ -543,28 +607,33 @@ class NetworkExamplesViewController: UIViewController {
         let request = WeakNetworkNotAllowedRequest()
         
         // 模拟弱网环境
-        ReachabilityManager.shared.networkStatus = .cellular(quality: .poor)
+        // 注意：我们不能直接设置networkStatus，因为它是只读的
         
         showAlert(title: "弱网环境（不允许请求）", message: "正在弱网环境下发送不允许的请求...")
         
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    if case .failure(let error) = completion {
-                        // 直接处理NetworkError，因为request方法返回的就是NetworkError
-                        switch error {
-                        case .weakNetworkNotAllowed:
-                            self.showAlert(title: "弱网限制", message: "请求被拒绝，因为当前为弱网环境且请求不允许在弱网下发送")
-                        default:
-                            self.showAlert(title: "错误", message: "错误: \(error.localizedDescription)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成")
+                        case .failure(let error):
+                            // 直接处理NetworkError，因为request方法返回的就是NetworkError
+                            switch error {
+                            case .weakNetworkNotAllowed:
+                                self?.showAlert(title: "弱网限制", message: "请求被拒绝，因为当前为弱网环境且请求不允许在弱网下发送")
+                            default:
+                                self?.showAlert(title: "错误", message: "错误: \(error.localizedDescription)")
+                            }
                         }
                     }
+                },
+                receiveValue: { [weak self] (_: User) in
+                    // 不需要处理成功的情况
                 }
-                
-                // 恢复网络状态
-                ReachabilityManager.shared.networkStatus = .wifi
-            }, receiveValue: { (_: User) in })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     // MARK: - 辅助方法

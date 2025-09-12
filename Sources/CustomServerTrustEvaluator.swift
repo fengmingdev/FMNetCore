@@ -10,7 +10,7 @@ import Alamofire
 
 /// 自定义服务器信任评估器
 @available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *)
-final class CustomServerTrustEvaluator: ServerTrustEvaluating, @unchecked Sendable {
+final class CustomServerTrustEvaluator: ServerTrustEvaluating, Sendable {
     private let config: NetworkConfig
     
     /// 初始化自定义服务器信任评估器
@@ -60,13 +60,8 @@ final class CustomServerTrustEvaluator: ServerTrustEvaluating, @unchecked Sendab
         // 获取服务器证书
         var serverCertificates: [SecCertificate] = []
         
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            serverCertificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate] ?? []
-        } else {
-            // 对于较早的版本，使用其他方法获取证书
-            // 注意：这可能需要不同的实现方式
-            return false
-        }
+        // 在这个类中，我们已经确保了iOS 15.0+的可用性，所以可以直接调用
+        serverCertificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate] ?? []
         
         // 检查服务器证书链中是否包含本地证书
         for serverCertificate in serverCertificates {
@@ -84,7 +79,7 @@ final class CustomServerTrustEvaluator: ServerTrustEvaluating, @unchecked Sendab
 @available(iOS, introduced: 10.0, obsoleted: 15.0)
 @available(watchOS, introduced: 3.0, obsoleted: 8.0)
 @available(tvOS, introduced: 10.0, obsoleted: 15.0)
-final class LegacyCustomServerTrustEvaluator: ServerTrustEvaluating {
+final class LegacyCustomServerTrustEvaluator: ServerTrustEvaluating, Sendable {
     private let config: NetworkConfig
     
     /// 初始化自定义服务器信任评估器

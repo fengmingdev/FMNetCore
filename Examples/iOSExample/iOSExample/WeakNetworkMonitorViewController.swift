@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import FMNetCore
 
 class WeakNetworkMonitorViewController: UIViewController {
     
@@ -28,22 +29,32 @@ class WeakNetworkMonitorViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
-        title = "弱网监控"
-        
-        // 创建导航栏按钮
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "清除",
-            style: .plain,
-            target: self,
-            action: #selector(clearEvents)
-        )
+        title = "网络状态监控"
         
         // 创建表格视图
         tableView = UITableView(frame: view.bounds, style: .plain)
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(NetworkEventTableViewCell.self, forCellReuseIdentifier: "NetworkEventCell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
+        
+        // 添加清除按钮
+        let clearButton = UIBarButtonItem(
+            title: "清除",
+            style: .plain,
+            target: self,
+            action: #selector(clearEvents)
+        )
+        navigationItem.rightBarButtonItem = clearButton
+        
+        // 设置约束
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
     }
     
     private func startMonitoring() {
@@ -58,25 +69,13 @@ class WeakNetworkMonitorViewController: UIViewController {
                     description: self.description(for: status)
                 )
                 
+                // 在主线程更新UI
                 DispatchQueue.main.async {
-                    self.networkEvents.insert(event, at: 0)
-                    self.tableView.reloadData()
-                }
-            }
-            .store(in: &cancellables)
-        
-        // 监听弱网检测通知
-        NotificationCenter.default.publisher(for: NSNotification.Name("WeakNetworkDetected"))
-            .sink { [weak self] _ in
-                guard let self = self else { return }
-                
-                let event = NetworkEvent(
-                    timestamp: Date(),
-                    status: ReachabilityManager.shared.networkStatus,
-                    description: "检测到弱网环境"
-                )
-                
-                DispatchQueue.main.async {
+                    // 限制事件数量，只保留最新的100条记录
+                    if self.networkEvents.count >= 100 {
+                        self.networkEvents.removeLast()
+                    }
+                    
                     self.networkEvents.insert(event, at: 0)
                     self.tableView.reloadData()
                 }
@@ -86,8 +85,6 @@ class WeakNetworkMonitorViewController: UIViewController {
     
     private func description(for status: NetworkStatus) -> String {
         switch status {
-        case .unknown:
-            return "网络状态未知"
         case .unreachable:
             return "网络不可达"
         case .wifi:
@@ -103,8 +100,6 @@ class WeakNetworkMonitorViewController: UIViewController {
                 qualityText = "一般"
             case .poor:
                 qualityText = "较差（弱网）"
-            case .unknown:
-                qualityText = "未知"
             }
             return "蜂窝网络 - 质量: \(qualityText)"
         }
@@ -200,8 +195,6 @@ class NetworkEventTableViewCell: UITableViewCell {
     
     private func statusText(for status: NetworkStatus) -> String {
         switch status {
-        case .unknown:
-            return "未知"
         case .unreachable:
             return "不可达"
         case .wifi:
@@ -212,15 +205,12 @@ class NetworkEventTableViewCell: UITableViewCell {
             case .good: return "良好"
             case .fair: return "一般"
             case .poor: return "弱网"
-            case .unknown: return "未知"
             }
         }
     }
     
     private func statusColor(for status: NetworkStatus) -> UIColor {
         switch status {
-        case .unknown:
-            return .systemGray
         case .unreachable:
             return .systemRed
         case .wifi:
@@ -231,7 +221,6 @@ class NetworkEventTableViewCell: UITableViewCell {
             case .good: return .systemBlue
             case .fair: return .systemOrange
             case .poor: return .systemRed
-            case .unknown: return .systemGray
             }
         }
     }

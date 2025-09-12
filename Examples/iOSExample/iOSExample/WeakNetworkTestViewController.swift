@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import FMNetCore
 
 class WeakNetworkTestViewController: UIViewController {
     
@@ -117,9 +118,6 @@ class WeakNetworkTestViewController: UIViewController {
         let backgroundColor: UIColor
         
         switch ReachabilityManager.shared.networkStatus {
-        case .unknown:
-            statusText = "网络状态: 未知"
-            backgroundColor = .systemGray
         case .unreachable:
             statusText = "网络状态: 不可达"
             backgroundColor = .systemRed
@@ -140,9 +138,6 @@ class WeakNetworkTestViewController: UIViewController {
             case .poor:
                 statusText = "网络状态: 蜂窝网络(较差)"
                 backgroundColor = .systemRed
-            case .unknown:
-                statusText = "网络状态: 蜂窝网络(未知)"
-                backgroundColor = .systemGray
             }
         }
         
@@ -179,33 +174,36 @@ class WeakNetworkTestViewController: UIViewController {
         let request = WeakNetworkTestRequest(allowsWeakNetworkValue: allowsWeakNetwork)
         
         // 发送请求
-        NetworkManager.shared.request(request)
-            .sink(receiveCompletion: { completion in
-                DispatchQueue.main.async {
-                    switch completion {
-                    case .finished:
-                        self.resultTextView.text += "✅ 请求完成\n"
-                    case .failure(let error):
-                        self.resultTextView.text += "❌ 请求失败: \(error)\n"
-                        // 直接处理NetworkError，因为request方法返回的就是NetworkError
-                        switch error {
-                        case .weakNetworkNotAllowed:
-                            self.resultTextView.text += "   原因: 当前为弱网环境且请求不允许在弱网下发送\n"
-                        case .networkUnreachable:
-                            self.resultTextView.text += "   原因: 网络不可达\n"
-                        case .timeout:
-                            self.resultTextView.text += "   原因: 请求超时\n"
-                        default:
-                            break
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.resultTextView.text += "✅ 请求完成\n"
+                        case .failure(let error):
+                            self?.resultTextView.text += "❌ 请求失败: \(error)\n"
+                            // 直接处理NetworkError，因为request方法返回的就是NetworkError
+                            switch error {
+                            case .weakNetworkNotAllowed:
+                                self?.resultTextView.text += "   原因: 当前为弱网环境且请求不允许在弱网下发送\n"
+                            case .networkUnreachable:
+                                self?.resultTextView.text += "   原因: 网络不可达\n"
+                            case .timeout:
+                                self?.resultTextView.text += "   原因: 请求超时\n"
+                            default:
+                                break
+                            }
                         }
                     }
+                },
+                receiveValue: { [weak self] (_: User) in  // 明确指定类型
+                    DispatchQueue.main.async {
+                        self?.resultTextView.text += "✅ 请求成功\n"
+                    }
                 }
-            }, receiveValue: { (_: User) in  // 明确指定类型
-                DispatchQueue.main.async {
-                    self.resultTextView.text += "✅ 请求成功\n"
-                }
-            })
-            .store(in: &NetworkManager.shared.cancellables)
+            )
+            .store(in: &self.cancellables)
     }
     
     @objc private func testAllEnvironmentsTapped() {
@@ -254,21 +252,26 @@ class WeakNetworkTestViewController: UIViewController {
             // 延迟一小段时间以确保UI更新
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // 发送请求
-                NetworkManager.shared.request(request)
-                    .sink(receiveCompletion: { completion in
-                        DispatchQueue.main.async {
-                            switch completion {
-                            case .finished:
-                                results[environment] = .success(nil)
-                                self.resultTextView.text += "✅ \(NetworkSimulation.description(for: environment)): 成功\n"
-                            case .failure(let error):
-                                results[environment] = .failure(error)
-                                self.resultTextView.text += "❌ \(NetworkSimulation.description(for: environment)): 失败 - \(error)\n"
+                NetworkManager.shared.request<User>(request)
+                    .sink(
+                        receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                            DispatchQueue.main.async {
+                                switch completion {
+                                case .finished:
+                                    results[environment] = .success(nil)
+                                    self?.resultTextView.text += "✅ \(NetworkSimulation.description(for: environment)): 成功\n"
+                                case .failure(let error):
+                                    results[environment] = .failure(error)
+                                    self?.resultTextView.text += "❌ \(NetworkSimulation.description(for: environment)): 失败 - \(error)\n"
+                                }
+                                dispatchGroup.leave()
                             }
-                            dispatchGroup.leave()
+                        },
+                        receiveValue: { [weak self] (_: User) in
+                            // 不需要处理成功的情况
                         }
-                    }, receiveValue: { (_: User) in })  // 明确指定类型
-                    .store(in: &NetworkManager.shared.cancellables)
+                    )
+                    .store(in: &self.cancellables)
             }
         }
         

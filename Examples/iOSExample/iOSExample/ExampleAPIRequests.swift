@@ -7,6 +7,7 @@
 
 import Foundation
 import Moya
+import FMNetCore
 
 // 示例数据模型
 struct User: Codable {

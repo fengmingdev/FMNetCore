@@ -40,7 +40,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         config.maxRetryCount = 3
         
         // 创建网络管理器实例（这会替换单例实例）
-        _ = NetworkManager(config: config)
+        _ = NetworkManager(config: config, isTest: true)
     }
 }
 #endif

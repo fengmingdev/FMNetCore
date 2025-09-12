@@ -13,7 +13,7 @@ import UIKit
 #endif
 
 /// 网络质量枚举
-enum NetworkQuality {
+public enum NetworkQuality {
     case excellent  // 优秀
     case good       // 良好
     case fair       // 一般
@@ -21,17 +21,17 @@ enum NetworkQuality {
 }
 
 /// 网络状态枚举
-enum NetworkStatus {
+public enum NetworkStatus {
     case unreachable
     case wifi
     case cellular(quality: NetworkQuality)
 }
 
 /// 网络可达性管理器
-final class ReachabilityManager: ObservableObject {
-    static let shared = ReachabilityManager()
+public final class ReachabilityManager: ObservableObject {
+    public static let shared = ReachabilityManager()
     
-    @Published private(set) var networkStatus: NetworkStatus = .wifi
+    @Published private(set) public var networkStatus: NetworkStatus = .wifi
     
     // 存储订阅
     internal var cancellables = Set<AnyCancellable>()
@@ -118,12 +118,12 @@ final class ReachabilityManager: ObservableObject {
     }
     
     /// 启动网络监测
-    func startMonitoring() {
+    public func startMonitoring() {
         // 监测已经在初始化时启动
     }
     
     /// 停止网络监测
-    func stopMonitoring() {
+    public func stopMonitoring() {
         guard let reachability = reachability else { return }
         SCNetworkReachabilitySetCallback(reachability, nil, nil)
         SCNetworkReachabilitySetDispatchQueue(reachability, nil)

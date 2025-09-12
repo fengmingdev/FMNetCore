@@ -12,32 +12,32 @@ import Alamofire
 
 /// 网络管理器，负责处理应用中的所有网络请求
 /// 使用单例模式确保全局唯一实例
-final class NetworkManager {
+public final class NetworkManager {
     // 单例实例
-    static let shared = NetworkManager()
+    public static let shared = NetworkManager()
     
     // 网络配置
-    var config: NetworkConfig
+    public var config: NetworkConfig
     
     // Moya 提供者
-    internal let provider: MoyaProvider<MultiTarget>
+    public let provider: MoyaProvider<MultiTarget>
     
     // 存储订阅
-    internal var cancellables = Set<AnyCancellable>()
+    public var cancellables = Set<AnyCancellable>()
     
     // 缓存管理器
-    private let cacheManager = CacheManager.shared
+    public let cacheManager = CacheManager.shared
     
     // 拦截器管理器
-    internal let interceptorManager = NetworkInterceptorManager.shared
+    public let interceptorManager = NetworkInterceptorManager.shared
     
     // 提供对缓存管理器的访问方法
-    internal func getCacheManager() -> CacheManager {
+    public func getCacheManager() -> CacheManager {
         return cacheManager
     }
     
     // 私有初始化方法，确保单例唯一性
-    private init(config: NetworkConfig = NetworkConfig(baseURL: URL(string: "https://api.example.com")!)) {
+    public init(config: NetworkConfig = NetworkConfig(baseURL: URL(string: "https://api.example.com")!)) {
         self.config = config
         
         // 创建URLSession配置
@@ -70,14 +70,14 @@ final class NetworkManager {
     }
     
     // 用于测试的初始化方法
-    internal convenience init(config: NetworkConfig, isTest: Bool) {
+    public convenience init(config: NetworkConfig, isTest: Bool) {
         self.init(config: config)
     }
     
     /// 创建URLSession配置
     /// - Parameter config: 网络配置
     /// - Returns: URLSessionConfiguration实例
-    private static func createURLSessionConfiguration(config: NetworkConfig) -> URLSessionConfiguration {
+    public static func createURLSessionConfiguration(config: NetworkConfig) -> URLSessionConfiguration {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = config.timeoutInterval
         
@@ -117,7 +117,7 @@ final class NetworkManager {
     /// 创建服务器信任管理器
     /// - Parameter config: 网络配置
     /// - Returns: ServerTrustManager实例或nil
-    private static func createServerTrustManager(config: NetworkConfig) -> ServerTrustManager? {
+    public static func createServerTrustManager(config: NetworkConfig) -> ServerTrustManager? {
         // 如果允许无效证书或配置了证书锁定，创建服务器信任管理器
         if config.allowInvalidCertificates || config.sslCertificatePath != nil {
             // 创建评估器
@@ -141,7 +141,7 @@ final class NetworkManager {
     ///   - configuration: URLSession配置
     ///   - config: 网络配置
     /// - Returns: Session实例
-    private static func createSession(configuration: URLSessionConfiguration, config: NetworkConfig) -> Session {
+    public static func createSession(configuration: URLSessionConfiguration, config: NetworkConfig) -> Session {
         // 如果配置了重定向或证书验证，创建相应的处理器
         if !config.allowRedirects || config.sslCertificatePath != nil || config.allowInvalidCertificates {
             // 创建重定向处理器
@@ -165,7 +165,7 @@ final class NetworkManager {
     }
     
     /// 设置默认拦截器
-    private func setupDefaultInterceptors() {
+    public func setupDefaultInterceptors() {
         // 添加日志拦截器
         interceptorManager.addInterceptor(LoggingInterceptor())
         
@@ -178,7 +178,7 @@ final class NetworkManager {
     
     /// 设置网络可达性监测
     /// 启动网络状态监测并订阅状态变化
-    private func setupReachability() {
+    public func setupReachability() {
         ReachabilityManager.shared.startMonitoring()
         
         // 监听网络状态变化
@@ -191,7 +191,7 @@ final class NetworkManager {
     
     /// 处理网络状态变化
     /// - Parameter status: 当前网络状态
-    private func handleNetworkStatusChange(_ status: NetworkStatus) {
+    public func handleNetworkStatusChange(_ status: NetworkStatus) {
         switch status {
         case .unreachable:
             NotificationCenter.default.post(name: NSNotification.Name("NetworkUnreachable"), object: nil)
@@ -206,7 +206,7 @@ final class NetworkManager {
     /// - Parameters:
     ///   - request: 符合APIRequest协议的请求对象
     /// - Returns: 返回包含解析后数据的Publisher
-    func request<T: Decodable, R: APIRequest>(_ request: R) -> AnyPublisher<T, NetworkError> {
+    public func request<T: Decodable, R: APIRequest>(_ request: R) -> AnyPublisher<T, NetworkError> {
         return self.request(request, useCache: false)
     }
     
@@ -215,7 +215,7 @@ final class NetworkManager {
     ///   - request: 符合APIRequest协议的请求对象
     ///   - useCache: 是否使用缓存
     /// - Returns: 返回包含解析后数据的Publisher
-    func request<T: Decodable, R: APIRequest>(_ request: R, useCache: Bool) -> AnyPublisher<T, NetworkError> {
+    public func request<T: Decodable, R: APIRequest>(_ request: R, useCache: Bool) -> AnyPublisher<T, NetworkError> {
         // 如果启用缓存，先尝试从缓存获取
         if useCache {
             let cacheKey = "\(type(of: request)).\(String(describing: request))"
@@ -285,7 +285,7 @@ final class NetworkManager {
     /// - Parameters:
     ///   - request: 符合APIRequest协议的请求对象
     /// - Returns: 返回包含解析后数据的Publisher
-    func requestWithLoading<T: Decodable, R: APIRequest>(_ request: R) -> AnyPublisher<T, NetworkError> {
+    public func requestWithLoading<T: Decodable, R: APIRequest>(_ request: R) -> AnyPublisher<T, NetworkError> {
         guard request.needsLoadingIndicator else {
             return self.request(request)
         }

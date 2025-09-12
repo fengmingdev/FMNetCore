@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FMNetCore
 
 class NetworkLogViewController: UIViewController {
     
@@ -61,7 +62,7 @@ class NetworkLogViewController: UIViewController {
     }
     
     @objc private func clearLogs() {
-        NetworkLogger.shared.clearLogs()
+        NetworkLogger.shared.clearLogEntries()
         loadLogs()
     }
     

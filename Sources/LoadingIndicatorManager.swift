@@ -13,8 +13,8 @@ import UIKit
 import AppKit
 #endif
 
-final class LoadingIndicatorManager {
-    static let shared = LoadingIndicatorManager()
+public final class LoadingIndicatorManager {
+    public static let shared = LoadingIndicatorManager()
     private init() {}
     
     private var loadingCount = 0
@@ -34,7 +34,7 @@ final class LoadingIndicatorManager {
     #endif
     
     // 显示加载视图
-    func showLoading() {
+    public func showLoading() {
         queue.sync {
             loadingCount += 1
             guard loadingCount == 1 else { return }
@@ -70,7 +70,7 @@ final class LoadingIndicatorManager {
     }
     
     // 隐藏加载视图
-    func hideLoading() {
+    public func hideLoading() {
         queue.sync {
             guard loadingCount > 0 else { return }
             loadingCount -= 1

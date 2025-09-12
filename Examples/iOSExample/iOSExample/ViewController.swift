@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 #endif
 import FMNetCore
+import Combine
 
 #if canImport(UIKit)
 class ViewController: UIViewController {
@@ -17,6 +18,7 @@ class ViewController: UIViewController {
     private var tableView: UITableView!
     private var examples: [Example] = []
     private var logTextView: UITextView!
+    private var cancellables = Set<AnyCancellable>()
     
     struct Example {
         let title: String
@@ -114,160 +116,75 @@ class ViewController: UIViewController {
     private func fetchUsers() {
         log("开始获取用户列表...")
         
-        enum UserAPI: TargetType {
-            case getUsers
-            
-            var baseURL: URL {
-                return URL(string: "https://jsonplaceholder.typicode.com")!
-            }
-            
-            var path: String {
-                return "/users"
-            }
-            
-            var method: Moya.Method {
-                return .get
-            }
-            
-            var task: Task {
-                return .requestPlain
-            }
-            
-            var headers: [String: String]? {
-                return nil
-            }
-        }
+        // 使用示例项目中的GetUsersRequest
+        let request = GetUsersRequest()
         
-        NetworkManager.shared.request(UserAPI.getUsers) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    self?.log("成功获取用户列表，状态码: \(response.statusCode)")
-                case .failure(let error):
-                    self?.log("获取用户列表失败: \(error)")
+        NetworkManager.shared.request<[User]>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    switch completion {
+                    case .finished:
+                        self?.log("获取用户列表完成")
+                    case .failure(let error):
+                        self?.log("获取用户列表失败: \(error)")
+                    }
+                },
+                receiveValue: { [weak self] (users: [User]) in
+                    self?.log("成功获取 \(users.count) 个用户")
                 }
-            }
-        }
+            )
+            .store(in: &self.cancellables)
     }
     
     private func fetchUser() {
         log("开始获取ID为1的用户...")
         
-        enum UserAPI: TargetType {
-            case getUser(id: Int)
-            
-            var baseURL: URL {
-                return URL(string: "https://jsonplaceholder.typicode.com")!
-            }
-            
-            var path: String {
-                switch self {
-                case .getUser(let id):
-                    return "/users/\(id)"
-                }
-            }
-            
-            var method: Moya.Method {
-                return .get
-            }
-            
-            var task: Task {
-                return .requestPlain
-            }
-            
-            var headers: [String: String]? {
-                return nil
-            }
-        }
+        // 使用示例项目中的GetUserRequest
+        let request = GetUserRequest(userId: 1)
         
-        NetworkManager.shared.request(UserAPI.getUser(id: 1)) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let response):
-                    self?.log("成功获取用户，状态码: \(response.statusCode)")
-                case .failure(let error):
-                    self?.log("获取用户失败: \(error)")
+        NetworkManager.shared.request<User>(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    switch completion {
+                    case .finished:
+                        self?.log("获取用户完成")
+                    case .failure(let error):
+                        self?.log("获取用户失败: \(error)")
+                    }
+                },
+                receiveValue: { [weak self] (user: User) in
+                    self?.log("成功获取用户: \(user.name)")
                 }
-            }
-        }
+            )
+            .store(in: &self.cancellables)
     }
     
     private func combinedRequest() {
         log("开始组合请求...")
         
-        enum UserAPI: TargetType {
-            case getUsers
-            
-            var baseURL: URL {
-                return URL(string: "https://jsonplaceholder.typicode.com")!
-            }
-            
-            var path: String {
-                return "/users"
-            }
-            
-            var method: Moya.Method {
-                return .get
-            }
-            
-            var task: Task {
-                return .requestPlain
-            }
-            
-            var headers: [String: String]? {
-                return nil
-            }
-        }
+        // 使用示例项目中的请求
+        let usersRequest = GetUsersRequest()
+        let postsRequest = GetPostsRequest()
         
-        enum PostAPI: TargetType {
-            case getPosts
-            
-            var baseURL: URL {
-                return URL(string: "https://jsonplaceholder.typicode.com")!
-            }
-            
-            var path: String {
-                return "/posts"
-            }
-            
-            var method: Moya.Method {
-                return .get
-            }
-            
-            var task: Task {
-                return .requestPlain
-            }
-            
-            var headers: [String: String]? {
-                return nil
-            }
-        }
+        // 并行发送两个请求
+        let usersPublisher: AnyPublisher<[User], NetworkError> = NetworkManager.shared.request(usersRequest)
+        let postsPublisher: AnyPublisher<[Post], NetworkError> = NetworkManager.shared.request(postsRequest)
         
-        let request1 = UserAPI.getUsers
-        let request2 = PostAPI.getPosts
-        
-        // 这里我们模拟组合请求
-        NetworkManager.shared.request(request1) { [weak self] result1 in
-            DispatchQueue.main.async {
-                switch result1 {
-                case .success(let response):
-                    self?.log("成功获取用户列表，状态码: \(response.statusCode)")
-                case .failure(let error):
-                    self?.log("获取用户列表失败: \(error)")
+        Publishers.Zip(usersPublisher, postsPublisher)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    switch completion {
+                    case .finished:
+                        self?.log("组合请求完成")
+                    case .failure(let error):
+                        self?.log("组合请求失败: \(error)")
+                    }
+                },
+                receiveValue: { [weak self] (users: [User], posts: [Post]) in
+                    self?.log("成功获取 \(users.count) 个用户和 \(posts.count) 个帖子")
                 }
-            }
-        }
-        
-        NetworkManager.shared.request(request2) { [weak self] result2 in
-            DispatchQueue.main.async {
-                switch result2 {
-                case .success(let response):
-                    self?.log("成功获取帖子列表，状态码: \(response.statusCode)")
-                case .failure(let error):
-                    self?.log("获取帖子列表失败: \(error)")
-                }
-            }
-        }
+            )
+            .store(in: &self.cancellables)
     }
 }
 

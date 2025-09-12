@@ -109,13 +109,8 @@ class NetworkURLSessionDelegate: NSObject, URLSessionTaskDelegate, URLSessionDel
         // 获取服务器证书
         var serverCertificates: [SecCertificate] = []
         
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            serverCertificates = SecTrustCopyCertificateChain(serverTrust) as? [SecCertificate] ?? []
-        } else {
-            // 对于较早的版本，使用其他方法获取证书
-            // 注意：这可能需要不同的实现方式
-            return false
-        }
+        // 在这个可用性检查范围内，我们可以直接调用新API
+        serverCertificates = SecTrustCopyCertificateChain(serverTrust) as? [SecCertificate] ?? []
         
         // 获取本地证书
         guard let localCertificateData = try? Data(contentsOf: URL(fileURLWithPath: certificatePath)) else {

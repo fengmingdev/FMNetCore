@@ -55,7 +55,7 @@
 
 1. 克隆仓库：
    ```
-   git clone https://github.com/your-username/FMNetCore.git
+   git clone https://github.com/fengmingdev/FMNetCore.git
    ```
 
 2. 进入项目目录：
@@ -65,10 +65,21 @@
 
 3. 解析依赖：
    ```
+   # 使用 Swift Package Manager
    swift package resolve
+   
+   # 或者使用 CocoaPods (适用于主项目)
+   pod install
    ```
 
-4. 生成 Xcode 项目（可选）：
+4. 对于 iOSExample 项目：
+   ```
+   cd Examples/iOSExample
+   pod install
+   ```
+   然后打开 `iOSExample.xcworkspace` 而不是 `iOSExample.xcodeproj`
+
+5. 生成 Xcode 项目（可选）：
    ```
    swift package generate-xcodeproj
    ```
@@ -89,7 +100,11 @@
 - 测试覆盖率应尽可能高
 - 运行测试：
   ```
+  # 使用 Swift Package Manager
   swift test
+  
+  # 或者使用 CocoaPods
+  xcodebuild test -workspace FMNetCore.xcworkspace -scheme FMNetCore -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.6'
   ```
 
 ## 文档

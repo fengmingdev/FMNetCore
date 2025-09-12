@@ -10,14 +10,14 @@ import Combine
 import Moya
 
 /// 响应处理器
-final class ResponseHandler {
-    static let shared = ResponseHandler()
+public final class ResponseHandler {
+    public static let shared = ResponseHandler()
     private init() {}
     
     /// 异步处理响应
     /// - Parameter response: Moya响应
     /// - Returns: 解析后的数据
-    func handleResponse<T: Decodable>(_ response: Response) -> AnyPublisher<T, NetworkError> {
+    public func handleResponse<T: Decodable>(_ response: Response) -> AnyPublisher<T, NetworkError> {
         // 检查状态码
         guard 200..<300 ~= response.statusCode else {
             return Fail(error: NetworkError.httpError(code: response.statusCode)).eraseToAnyPublisher()
@@ -39,7 +39,7 @@ final class ResponseHandler {
     /// 同步处理响应
     /// - Parameter response: Moya响应
     /// - Returns: 解析后的数据
-    func handleResponseSync<T: Decodable>(_ response: Response) throws -> T {
+    public func handleResponseSync<T: Decodable>(_ response: Response) throws -> T {
         guard 200..<300 ~= response.statusCode else {
             throw NetworkError.httpError(code: response.statusCode)
         }

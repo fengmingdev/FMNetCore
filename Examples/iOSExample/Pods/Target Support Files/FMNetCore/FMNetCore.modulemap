@@ -1,0 +1,6 @@
+framework module FMNetCore {
+  umbrella header "FMNetCore-umbrella.h"
+
+  export *
+  module * { export * }
+}

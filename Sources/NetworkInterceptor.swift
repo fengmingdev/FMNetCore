@@ -9,7 +9,7 @@ import Foundation
 import Moya
 
 /// 网络请求拦截器协议
-protocol NetworkInterceptor: AnyObject {
+public protocol NetworkInterceptor: AnyObject {
     /// 请求即将发送时调用
     /// - Parameters:
     ///   - request: 即将发送的请求
@@ -39,12 +39,14 @@ protocol NetworkInterceptor: AnyObject {
 }
 
 /// 默认的网络拦截器实现
-class DefaultNetworkInterceptor: NetworkInterceptor {
-    func willSendRequest(_ request: Any, target: TargetType) {
+open class DefaultNetworkInterceptor: NetworkInterceptor {
+    public init() {}
+    
+    open func willSendRequest(_ request: Any, target: TargetType) {
         NetworkLogger.shared.log(.info, message: "🚀 发送请求: \(target.method) \(target.baseURL)\(target.path)")
     }
     
-    func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
+    open func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
         switch result {
         case .success(let response):
             NetworkLogger.shared.log(.info, message: "✅ 请求完成: \(target.method) \(target.baseURL)\(target.path) - 状态码: \(response.statusCode)")
@@ -53,19 +55,19 @@ class DefaultNetworkInterceptor: NetworkInterceptor {
         }
     }
     
-    func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
+    open func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
         NetworkLogger.shared.log(.info, message: "✅ 请求成功: \(target.method) \(target.baseURL)\(target.path) - 状态码: \(response.statusCode)")
     }
     
-    func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
+    open func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
         NetworkLogger.shared.log(.error, message: "❌ 请求失败: \(target.method) \(target.baseURL)\(target.path) - 错误: \(error)")
     }
 }
 
 /// 网络拦截器管理器
-class NetworkInterceptorManager {
+public class NetworkInterceptorManager {
     /// 单例实例
-    static let shared = NetworkInterceptorManager()
+    public static let shared = NetworkInterceptorManager()
     
     /// 拦截器列表
     private var interceptors: [NetworkInterceptor] = []
@@ -81,13 +83,13 @@ class NetworkInterceptorManager {
     
     /// 添加拦截器
     /// - Parameter interceptor: 要添加的拦截器
-    func addInterceptor(_ interceptor: NetworkInterceptor) {
+    public func addInterceptor(_ interceptor: NetworkInterceptor) {
         interceptors.append(interceptor)
     }
     
     /// 移除拦截器
     /// - Parameter interceptor: 要移除的拦截器
-    func removeInterceptor(_ interceptor: NetworkInterceptor) {
+    public func removeInterceptor(_ interceptor: NetworkInterceptor) {
         // 使用对象标识来移除拦截器
         interceptors.removeAll { existingInterceptor in
             ObjectIdentifier(existingInterceptor) == ObjectIdentifier(interceptor)
@@ -95,7 +97,7 @@ class NetworkInterceptorManager {
     }
     
     /// 移除所有拦截器
-    func removeAllInterceptors() {
+    public func removeAllInterceptors() {
         interceptors.removeAll()
     }
     
@@ -153,15 +155,17 @@ class NetworkInterceptorManager {
 }
 
 /// 日志拦截器
-class LoggingInterceptor: NetworkInterceptor {
-    func willSendRequest(_ request: Any, target: TargetType) {
+open class LoggingInterceptor: NetworkInterceptor {
+    public init() {}
+    
+    open func willSendRequest(_ request: Any, target: TargetType) {
         NetworkLogger.shared.log(.info, message: "📡 [请求发送] \(target.method) \(target.baseURL)\(target.path)")
         if let apiRequest = request as? any APIRequest {
             NetworkLogger.shared.log(.info, message: "   请求对象: \(type(of: apiRequest))")
         }
     }
     
-    func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
+    open func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
         switch result {
         case .success(let response):
             NetworkLogger.shared.log(.info, message: "✅ [请求完成] \(target.method) \(target.baseURL)\(target.path) - 状态码: \(response.statusCode)")
@@ -170,25 +174,27 @@ class LoggingInterceptor: NetworkInterceptor {
         }
     }
     
-    func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
+    open func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
         NetworkLogger.shared.log(.info, message: "✅ [请求成功] \(target.method) \(target.baseURL)\(target.path) - 状态码: \(response.statusCode)")
     }
     
-    func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
+    open func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
         NetworkLogger.shared.log(.error, message: "❌ [请求失败] \(target.method) \(target.baseURL)\(target.path) - 错误: \(error)")
     }
 }
 
 /// 性能监控拦截器
-class PerformanceInterceptor: NetworkInterceptor {
+open class PerformanceInterceptor: NetworkInterceptor {
     private var requestStartTimes: [String: Date] = [:]
     
-    func willSendRequest(_ request: Any, target: TargetType) {
+    public init() {}
+    
+    open func willSendRequest(_ request: Any, target: TargetType) {
         let key = "\(target.method.rawValue)\(target.baseURL)\(target.path)"
         requestStartTimes[key] = Date()
     }
     
-    func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
+    open func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
         let key = "\(target.method.rawValue)\(target.baseURL)\(target.path)"
         if let startTime = requestStartTimes[key] {
             let duration = Date().timeIntervalSince(startTime)
@@ -197,44 +203,32 @@ class PerformanceInterceptor: NetworkInterceptor {
         }
     }
     
-    func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
-        // 由didCompleteRequest处理
+    open func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
+        // 性能监控在didCompleteRequest中处理
     }
     
-    func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
-        // 由didCompleteRequest处理
+    open func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
+        // 性能监控在didCompleteRequest中处理
     }
 }
 
 /// 缓存拦截器
-class CacheInterceptor: NetworkInterceptor {
-    private let cacheManager = CacheManager.shared
+open class CacheInterceptor: NetworkInterceptor {
+    public init() {}
     
-    func willSendRequest(_ request: Any, target: TargetType) {
-        // 检查是否有缓存
-        if let apiRequest = request as? any APIRequest {
-            let cacheKey = "\(type(of: apiRequest)).\(String(describing: apiRequest))"
-            if cacheManager.getMemoryCache(forKey: cacheKey) != nil {
-                NetworkLogger.shared.log(.info, message: "📦 [缓存命中] \(target.method) \(target.baseURL)\(target.path)")
-            }
-        }
+    open func willSendRequest(_ request: Any, target: TargetType) {
+        // 请求发送前的处理
     }
     
-    func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Moya.Response, MoyaError>) {
-        // 缓存响应数据
-        if case .success(let response) = result,
-           let apiRequest = request as? any APIRequest {
-            let cacheKey = "\(type(of: apiRequest)).\(String(describing: apiRequest))"
-            cacheManager.setMemoryCache(response.data as AnyObject, forKey: cacheKey)
-            NetworkLogger.shared.log(.info, message: "💾 [缓存存储] \(target.method) \(target.baseURL)\(target.path)")
-        }
+    open func didCompleteRequest(_ request: Any, target: TargetType, result: Result<Response, MoyaError>) {
+        // 请求完成后的处理
     }
     
-    func didSucceedRequest(_ request: Any, target: TargetType, response: Moya.Response) {
-        // 由didCompleteRequest处理
+    open func didSucceedRequest(_ request: Any, target: TargetType, response: Response) {
+        // 请求成功后的处理
     }
     
-    func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
-        // 不缓存失败的请求
+    open func didFailRequest(_ request: Any, target: TargetType, error: MoyaError) {
+        // 请求失败后的处理
     }
 }

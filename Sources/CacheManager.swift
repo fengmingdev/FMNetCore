@@ -9,9 +9,9 @@ import Foundation
 
 /// 缓存管理器
 /// 负责管理网络请求的缓存，提高性能和用户体验
-final class CacheManager {
+public final class CacheManager {
     /// 单例实例
-    static let shared = CacheManager()
+    public static let shared = CacheManager()
     
     /// 内存缓存
     private let memoryCache = NSCache<NSString, AnyObject>()
@@ -133,7 +133,7 @@ final class CacheManager {
     ///   - key: 缓存键
     ///   - expiry: 过期时间（秒）
     ///   - cacheType: 缓存类型
-    func setMemoryCache(_ data: AnyObject, forKey key: String, expiry: TimeInterval = 300, cacheType: CacheType = .memory) {
+    public func setMemoryCache(_ data: AnyObject, forKey key: String, expiry: TimeInterval = 300, cacheType: CacheType = .memory) {
         let cacheKey = generateCacheKey(key) as NSString
         memoryCache.setObject(data, forKey: cacheKey, cost: 1)
         
@@ -149,7 +149,7 @@ final class CacheManager {
     /// 从内存缓存获取数据
     /// - Parameter key: 缓存键
     /// - Returns: 缓存的数据，如果不存在或已过期则返回nil
-    func getMemoryCache(forKey key: String) -> AnyObject? {
+    public func getMemoryCache(forKey key: String) -> AnyObject? {
         let cacheKey = generateCacheKey(key) as NSString
         let object = memoryCache.object(forKey: cacheKey)
         
@@ -169,7 +169,7 @@ final class CacheManager {
     ///   - key: 缓存键
     ///   - expiry: 过期时间（秒）
     ///   - cacheType: 缓存类型
-    func setDiskCache(_ data: Data, forKey key: String, expiry: TimeInterval = 3600, cacheType: CacheType = .disk) {
+    public func setDiskCache(_ data: Data, forKey key: String, expiry: TimeInterval = 3600, cacheType: CacheType = .disk) {
         diskQueue.async { [weak self] in
             guard let self = self else { return }
             
@@ -201,7 +201,7 @@ final class CacheManager {
     /// 从磁盘缓存获取数据
     /// - Parameter key: 缓存键
     /// - Returns: 缓存的数据，如果不存在或已过期则返回nil
-    func getDiskCache(forKey key: String) -> Data? {
+    public func getDiskCache(forKey key: String) -> Data? {
         let cacheKey = generateCacheKey(key)
         let filePath = (diskCachePath as NSString).appendingPathComponent(cacheKey)
         
@@ -237,7 +237,7 @@ final class CacheManager {
     }
     
     /// 清除所有缓存
-    func clearAllCache() {
+    public func clearAllCache() {
         // 清除内存缓存
         memoryCache.removeAllObjects()
         
@@ -253,12 +253,12 @@ final class CacheManager {
     }
     
     /// 清除内存缓存
-    func clearMemoryCache() {
+    public func clearMemoryCache() {
         memoryCache.removeAllObjects()
     }
     
     /// 清除磁盘缓存
-    func clearDiskCache() {
+    public func clearDiskCache() {
         diskQueue.async { [weak self] in
             guard let self = self else { return }
             try? FileManager.default.removeItem(atPath: self.diskCachePath)
@@ -267,20 +267,20 @@ final class CacheManager {
     }
     
     /// 获取缓存统计信息
-    func getCacheStats() -> CacheStats {
+    public func getCacheStats() -> CacheStats {
         return cacheStats
     }
 }
 
 /// 缓存类型枚举
-enum CacheType: String, Codable {
+public enum CacheType: String, Codable {
     case memory
     case disk
     case both
 }
 
 /// 缓存策略枚举
-enum CachePolicy {
+public enum CachePolicy {
     case ignoreCache // 忽略缓存，直接请求网络
     case cacheOnly // 只使用缓存，不请求网络
     case cacheFirst // 优先使用缓存，如果缓存不存在则请求网络
@@ -289,79 +289,83 @@ enum CachePolicy {
 }
 
 /// 缓存配置
-struct CacheConfig {
+public struct CacheConfig {
     /// 最大磁盘缓存大小（字节），默认50MB
-    var maxDiskCacheSize: UInt64 = 50 * 1024 * 1024
+    public var maxDiskCacheSize: UInt64 = 50 * 1024 * 1024
     
     /// 默认内存缓存过期时间（秒），默认5分钟
-    var defaultMemoryExpiry: TimeInterval = 300
+    public var defaultMemoryExpiry: TimeInterval = 300
     
     /// 默认磁盘缓存过期时间（秒），默认1小时
-    var defaultDiskExpiry: TimeInterval = 3600
+    public var defaultDiskExpiry: TimeInterval = 3600
     
     /// 是否启用LRU缓存淘汰策略
-    var enableLRU: Bool = true
+    public var enableLRU: Bool = true
     
     /// 内存缓存最大数量
-    var maxMemoryCacheCount: Int = 100
+    public var maxMemoryCacheCount: Int = 100
     
     /// 是否压缩磁盘缓存
-    var compressDiskCache: Bool = false
+    public var compressDiskCache: Bool = false
+    
+    public init() {}
 }
 
 /// 缓存统计信息
-struct CacheStats {
-    var memoryHitCount: Int = 0
-    var diskHitCount: Int = 0
-    var missCount: Int = 0
-    var memoryCacheCount: Int = 0
-    var diskCacheCount: Int = 0
+public struct CacheStats {
+    public var memoryHitCount: Int = 0
+    public var diskHitCount: Int = 0
+    public var missCount: Int = 0
+    public var memoryCacheCount: Int = 0
+    public var diskCacheCount: Int = 0
     
-    mutating func recordMemoryHit() {
+    public mutating func recordMemoryHit() {
         memoryHitCount += 1
     }
     
-    mutating func recordDiskHit() {
+    public mutating func recordDiskHit() {
         diskHitCount += 1
     }
     
-    mutating func recordMiss() {
+    public mutating func recordMiss() {
         missCount += 1
     }
     
-    mutating func updateMemoryCacheCount(_ count: Int) {
+    public mutating func updateMemoryCacheCount(_ count: Int) {
         memoryCacheCount = count
     }
     
-    mutating func updateDiskCacheCount(_ count: Int) {
+    public mutating func updateDiskCacheCount(_ count: Int) {
         diskCacheCount = count
     }
     
-    var hitRate: Double {
+    public var hitRate: Double {
         let totalHits = memoryHitCount + diskHitCount
         let totalRequests = totalHits + missCount
         return totalRequests > 0 ? Double(totalHits) / Double(totalRequests) : 0
     }
+    
+    public init() {}
 }
 
 /// 缓存数据结构
-class CacheData: NSObject, NSCoding, Codable {
+public class CacheData: NSObject, NSCoding, Codable {
     /// 实际数据
-    let data: Data
+    public let data: Data
     
     /// 过期日期
-    let expiryDate: Date
+    public let expiryDate: Date
     
     /// 缓存创建时间
-    let createdAt: Date
+    public let createdAt: Date
     
     /// 缓存键
-    let key: String
+    public let key: String
     
     /// 缓存类型
-    let cacheType: CacheType
+    public let cacheType: CacheType
     
-    init(data: Data, expiryDate: Date, key: String, cacheType: CacheType = .memory) {
+    public init(data: Data, expiryDate: Date, key: String, cacheType: CacheType = .memory) {
         self.data = data
         self.expiryDate = expiryDate
         self.createdAt = Date()
@@ -372,7 +376,7 @@ class CacheData: NSObject, NSCoding, Codable {
     
     // MARK: - NSCoding
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         guard let data = coder.decodeObject(forKey: "data") as? Data,
               let expiryDate = coder.decodeObject(forKey: "expiryDate") as? Date,
               let createdAt = coder.decodeObject(forKey: "createdAt") as? Date,
@@ -390,7 +394,7 @@ class CacheData: NSObject, NSCoding, Codable {
         super.init()
     }
     
-    func encode(with coder: NSCoder) {
+    public func encode(with coder: NSCoder) {
         coder.encode(data, forKey: "data")
         coder.encode(expiryDate, forKey: "expiryDate")
         coder.encode(createdAt, forKey: "createdAt")

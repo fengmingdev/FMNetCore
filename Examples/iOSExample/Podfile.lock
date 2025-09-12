@@ -1,0 +1,30 @@
+PODS:
+  - Alamofire (5.10.2)
+  - FMNetCore (1.0.0):
+    - Alamofire (~> 5.4)
+    - Moya (~> 15.0)
+  - Moya (15.0.0):
+    - Moya/Core (= 15.0.0)
+  - Moya/Core (15.0.0):
+    - Alamofire (~> 5.0)
+
+DEPENDENCIES:
+  - FMNetCore (from `../../`)
+
+SPEC REPOS:
+  trunk:
+    - Alamofire
+    - Moya
+
+EXTERNAL SOURCES:
+  FMNetCore:
+    :path: "../../"
+
+SPEC CHECKSUMS:
+  Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
+  FMNetCore: 1de2c6af61718d64d99e75f06ee9b9123a6125cc
+  Moya: 138f0573e53411fb3dc17016add0b748dfbd78ee
+
+PODFILE CHECKSUM: 96cbad6da8d818d6a10657fafb8d2dd8e442bf97
+
+COCOAPODS: 1.16.2

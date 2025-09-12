@@ -8,7 +8,7 @@
 import Foundation
 
 /// 网络错误枚举
-enum NetworkError: Error, LocalizedError {
+public enum NetworkError: Error, LocalizedError {
     /// 无效URL
     case invalidURL
     
@@ -49,7 +49,7 @@ enum NetworkError: Error, LocalizedError {
     case other(error: Error)
     
     /// 错误描述
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .invalidURL:
             return "无效的URL"

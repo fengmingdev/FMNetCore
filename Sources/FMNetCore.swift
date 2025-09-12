@@ -14,3 +14,7 @@ public struct FMNetCore {
     public init() {
     }
 }
+
+// 公开所有重要的类型，方便外部使用
+@_exported import Moya
+@_exported import Alamofire

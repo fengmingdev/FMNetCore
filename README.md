@@ -75,6 +75,7 @@ FMNetCore/
 │   ├── generate-docs.sh
 │   └── release.sh
 ├── Package.swift
+├── FMNetCore.podspec
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE
@@ -88,15 +89,29 @@ FMNetCore/
 在 Xcode 中，选择 File > Swift Packages > Add Package Dependency，然后输入以下 URL：
 
 ```
-https://github.com/your-username/FMNetCore.git
+https://github.com/fengmingdev/FMNetCore.git
 ```
 
 或者在 Package.swift 文件中添加依赖：
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-username/FMNetCore.git", from: "1.0.0")
+    .package(url: "https://github.com/fengmingdev/FMNetCore.git", from: "1.0.0")
 ]
+```
+
+### CocoaPods
+
+FMNetCore 也支持通过 CocoaPods 安装。要使用 CocoaPods 集成 FMNetCore 到您的项目中，请在您的 Podfile 中添加以下内容：
+
+```ruby
+pod 'FMNetCore', '~> 1.0'
+```
+
+然后运行：
+
+```bash
+pod install
 ```
 
 ## 快速开始

@@ -24,9 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example API requests
 - Documentation
 - Development rules documentation to avoid recurring issues
+- CocoaPods support with FMNetCore.podspec
 
 ### Changed
-- N/A
+- Updated git repository URL to https://github.com/fengmingdev/FMNetCore
+- iOSExample now uses CocoaPods instead of Swift Package Manager for dependency management
+- Added Podfile for iOSExample project
 
 ### Deprecated
 - N/A

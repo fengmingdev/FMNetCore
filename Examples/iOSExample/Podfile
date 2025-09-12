@@ -1,0 +1,16 @@
+# iOSExample Podfile
+platform :ios, '13.0'
+
+target 'iOSExample' do
+  use_frameworks!
+  
+  # 使用本地路径引用FMNetCore
+  pod 'FMNetCore', :path => '../../'
+  
+  # 如果需要发布到公共仓库，可以使用以下方式：
+  # pod 'FMNetCore', :git => 'https://github.com/fengmingdev/FMNetCore.git', :branch => 'main'
+  
+  # 其他可能需要的依赖
+  # pod 'Alamofire', '~> 5.4'
+  # pod 'Moya', '~> 15.0'
+end

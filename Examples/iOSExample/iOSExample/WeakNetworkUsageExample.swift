@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import FMNetCore
 
 /// 弱网环境使用示例
 class WeakNetworkUsageExample {
@@ -110,7 +111,7 @@ class WeakNetworkUsageExample {
         }
         
         let request = AdaptiveRequest(userId: 1)
-        NetworkManager.shared.request(request)
+        NetworkManager.shared.request<User>(request)
             .sink(receiveCompletion: { completion in
                 switch completion {
                 case .finished:
@@ -144,7 +145,7 @@ class WeakNetworkUsageExample {
         // 在应用启动时预加载数据
         func preloadData() {
             let request = PreloadRequest(userId: 1)
-            NetworkManager.shared.request(request, useCache: true)
+            NetworkManager.shared.request<User>(request, useCache: true)
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .finished:
@@ -227,7 +228,7 @@ class WeakNetworkUsageExample {
         }
         
         let request = RecoverableRequest(userId: 1)
-        NetworkManager.shared.request(request)
+        NetworkManager.shared.request<User>(request)
             .sink(receiveCompletion: { completion in
                 switch completion {
                 case .finished:

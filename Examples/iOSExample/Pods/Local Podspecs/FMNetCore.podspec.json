@@ -1,0 +1,38 @@
+{
+  "name": "FMNetCore",
+  "version": "1.0.0",
+  "summary": "A powerful iOS network library based on Alamofire and Moya.",
+  "description": "FMNetCore is a powerful iOS network library based on Alamofire and Moya, providing a clean API and rich features.",
+  "homepage": "https://github.com/fengmingdev/FMNetCore",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "Fengming": "1028708571@qq.com"
+  },
+  "platforms": {
+    "ios": "13.0",
+    "osx": "10.15",
+    "watchos": "6.0",
+    "tvos": "13.0"
+  },
+  "source": {
+    "git": "https://github.com/fengmingdev/FMNetCore.git",
+    "tag": "1.0.0"
+  },
+  "source_files": [
+    "Sources",
+    "Sources/**/*.{h,m,swift}"
+  ],
+  "exclude_files": "Sources/Exclude",
+  "requires_arc": true,
+  "dependencies": {
+    "Alamofire": [
+      "~> 5.4"
+    ],
+    "Moya": [
+      "~> 15.0"
+    ]
+  }
+}

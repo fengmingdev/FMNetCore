@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 extension NetworkStatus: Equatable {
-    static func == (lhs: NetworkStatus, rhs: NetworkStatus) -> Bool {
+    public static func == (lhs: NetworkStatus, rhs: NetworkStatus) -> Bool {
         switch (lhs, rhs) {
         case (.unreachable, .unreachable):
             return true
@@ -24,7 +24,7 @@ extension NetworkStatus: Equatable {
 }
 
 extension NetworkQuality: Equatable {
-    static func == (lhs: NetworkQuality, rhs: NetworkQuality) -> Bool {
+    public static func == (lhs: NetworkQuality, rhs: NetworkQuality) -> Bool {
         switch (lhs, rhs) {
         case (.excellent, .excellent):
             return true
