@@ -7,6 +7,11 @@ target 'iOSExample' do
   # 使用本地路径引用FMNetCore
   pod 'FMNetCore', :path => '../../'
   
+  # 添加SwiftProtobuf和RxSwift支持
+  pod 'SwiftProtobuf', '~> 1.26'
+  pod 'RxSwift', '~> 6.5'
+  pod 'RxCocoa', '~> 6.5'
+  
   # 如果需要发布到公共仓库，可以使用以下方式：
   # pod 'FMNetCore', :git => 'https://github.com/fengmingdev/FMNetCore.git', :branch => 'main'
   

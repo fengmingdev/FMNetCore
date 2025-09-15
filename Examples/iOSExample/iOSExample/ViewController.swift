@@ -91,6 +91,22 @@ class ViewController: UIViewController {
             )
         ]
         
+        // 添加RxSwift示例（如果可用）
+        #if canImport(RxSwift)
+        examples.append(Example(
+            title: "RxSwift示例",
+            action: showRxSwiftExample
+        ))
+        #endif
+        
+        // 添加Protobuf示例（如果可用）
+        #if canImport(SwiftProtobuf)
+        examples.append(Example(
+            title: "Protobuf示例",
+            action: showProtobufExample
+        ))
+        #endif
+        
         tableView.reloadData()
     }
     
@@ -186,6 +202,24 @@ class ViewController: UIViewController {
             )
             .store(in: &self.cancellables)
     }
+    
+    #if canImport(RxSwift)
+    private func showRxSwiftExample() {
+        log("显示RxSwift示例...")
+        let alert = UIAlertController(title: "RxSwift支持", message: "FMNetCore已启用RxSwift支持。您可以在项目中使用rxRequest、rxRequestWithLoading等方法。", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
+    #endif
+    
+    #if canImport(SwiftProtobuf)
+    private func showProtobufExample() {
+        log("显示Protobuf示例...")
+        let alert = UIAlertController(title: "Protobuf支持", message: "FMNetCore已启用Protobuf支持。您可以实现ProtobufAPIRequest协议来使用Protobuf序列化。", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
+    #endif
 }
 
 extension ViewController: UITableViewDataSource, UITableViewDelegate {

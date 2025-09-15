@@ -8,6 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- SwiftProtobuf 支持，包括 ProtobufAPIRequest 协议和 ProtobufResponseHandler
+- RxSwift 支持，包括 rxRequest、rxRequestWithLoading、rxCombinedRequest 等扩展方法
+- ProtobufSupport.swift 文件提供 Protobuf 相关功能
+- RxSwiftSupport.swift 文件提供 RxSwift 相关功能
+- iOS 示例应用中添加 Protobuf 和 RxSwift 示例文件
+- 在 Package.swift 中添加 SwiftProtobuf 和 RxSwift 依赖
+- 在 FMNetCore.podspec 中添加 SwiftProtobuf 和 RxSwift 依赖
+- 在 Examples/iOSExample/Podfile 中添加 SwiftProtobuf 和 RxSwift 依赖
+- 在 FMNetCore.swift 中添加条件导入 SwiftProtobuf 和 RxSwift
+- 在 README.md 中添加 SwiftProtobuf 和 RxSwift 使用说明
+
+### Changed
+- 更新 git repository URL 到 https://github.com/fengmingdev/FMNetCore
+- iOSExample 现在使用 CocoaPods 而不是 Swift Package Manager 进行依赖管理
+- 添加 Podfile 用于 iOSExample 项目
+
+### Deprecated
+- N/A
+
+### Removed
+- N/A
+
+### Fixed
+- N/A
+
+### Security
+- N/A
+
+## [1.0.0] - 2025-09-12
+
+### Added
 - Initial release of FMNetCore
 - NetworkManager for handling HTTP requests
 - NetworkInterceptor for custom request/response processing
@@ -25,20 +56,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation
 - Development rules documentation to avoid recurring issues
 - CocoaPods support with FMNetCore.podspec
-
-### Changed
-- Updated git repository URL to https://github.com/fengmingdev/FMNetCore
-- iOSExample now uses CocoaPods instead of Swift Package Manager for dependency management
-- Added Podfile for iOSExample project
-
-### Deprecated
-- N/A
-
-### Removed
-- N/A
-
-### Fixed
-- N/A
-
-### Security
-- N/A

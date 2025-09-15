@@ -18,6 +18,20 @@ dependencies: [
 ]
 ```
 
+### CocoaPods
+
+FMNetCore 也支持通过 CocoaPods 安装。要使用 CocoaPods 集成 FMNetCore 到您的项目中，请在您的 Podfile 中添加以下内容：
+
+```ruby
+pod 'FMNetCore', '~> 1.0'
+```
+
+然后运行：
+
+```bash
+pod install
+```
+
 ## 基本用法
 
 ### 创建网络管理器
@@ -127,4 +141,272 @@ let taskId = networkManager.requestWithLoading(ExampleAPIRequests.getUsers) { re
 
 // 可以取消任务
 CoroutineManager.shared.cancelTask(taskId)
+```
+
+## SwiftProtobuf 支持
+
+FMNetCore 提供了对 SwiftProtobuf 的可选支持。要使用此功能，您需要在项目中添加 SwiftProtobuf 依赖。
+
+### 安装依赖
+
+#### 使用 Swift Package Manager
+
+在 `Package.swift` 中添加：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.26.0")
+]
+```
+
+#### 使用 CocoaPods
+
+在 `Podfile` 中添加：
+
+```ruby
+pod 'SwiftProtobuf', '~> 1.26'
+```
+
+### 定义 Protobuf 消息
+
+首先，您需要定义 `.proto` 文件并生成 Swift 代码。例如，创建一个 `user.proto` 文件：
+
+```protobuf
+syntax = "proto3";
+
+message User {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+}
+```
+
+然后使用 `protoc` 和 `protoc-gen-swift` 生成 Swift 代码：
+
+```bash
+protoc --swift_out=. user.proto
+```
+
+### 使用 Protobuf 请求
+
+```swift
+import FMNetCore
+import SwiftProtobuf
+
+// 实现 ProtobufAPIRequest 协议
+struct GetUserProtobufRequest: ProtobufAPIRequest {
+    typealias Target = UserAPI
+    typealias RequestMessage = User  // 由.proto生成的消息
+    typealias ResponseMessage = User // 由.proto生成的消息
+    
+    let userId: Int
+    
+    func asTarget() -> UserAPI {
+        return .getUser(id: userId)
+    }
+    
+    func buildRequestMessage() -> User? {
+        // 构建请求消息（如果需要发送数据到服务器）
+        let request = User()
+        request.id = Int32(userId)
+        return request
+    }
+    
+    func parseResponseMessage(from data: Data) throws -> User {
+        // 解析响应消息
+        return try User(serializedData: data)
+    }
+    
+    // 可选：自定义配置
+    var retryCount: Int? { return 2 }
+    var needsLoadingIndicator: Bool { true }
+}
+
+// 发送请求
+let request = GetUserProtobufRequest(userId: 1)
+
+// 使用 Combine
+networkManager.request(request)
+    .sink(
+        receiveCompletion: { completion in
+            switch completion {
+            case .finished:
+                print("请求完成")
+            case .failure(let error):
+                print("请求失败: \(error)")
+            }
+        },
+        receiveValue: { user in
+            print("成功获取用户: \(user.name)")
+        }
+    )
+    .store(in: &cancellables)
+
+// 使用回调方式
+networkManager.requestWithLoading(request) { result in
+    switch result {
+    case .success(let user):
+        print("成功获取用户: \(user.name)")
+    case .failure(let error):
+        print("获取用户失败: \(error)")
+    }
+}
+```
+
+## RxSwift 支持
+
+FMNetCore 提供了对 RxSwift 的可选支持。要使用此功能，您需要在项目中添加 RxSwift 依赖。
+
+### 安装依赖
+
+#### 使用 Swift Package Manager
+
+在 `Package.swift` 中添加：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.5.0")
+]
+```
+
+#### 使用 CocoaPods
+
+在 `Podfile` 中添加：
+
+```ruby
+pod 'RxSwift', '~> 6.5'
+pod 'RxCocoa', '~> 6.5'
+```
+
+### 使用 RxSwift 扩展
+
+```swift
+import FMNetCore
+import RxSwift
+import RxCocoa
+
+let disposeBag = DisposeBag()
+let request = GetUsersRequest()
+
+// 基本请求
+NetworkManager.shared.rxRequest([User].self, request)
+    .subscribe(
+        onNext: { users in
+            print("成功获取 \(users.count) 个用户")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        },
+        onCompleted: {
+            print("请求完成")
+        }
+    )
+    .disposed(by: disposeBag)
+
+// Protobuf请求
+let protobufRequest = GetUserProtobufRequest(userId: 1)
+NetworkManager.shared.rxRequest(protobufRequest)
+    .subscribe(
+        onNext: { user in
+            print("成功获取用户: \(user.name)")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+
+// 组合请求
+let usersRequest = GetUsersRequest()
+let postsRequest = GetPostsRequest()
+
+NetworkManager.shared.rxCombinedRequest([User].self, [Post].self, usersRequest, postsRequest)
+    .subscribe(
+        onNext: { (users, posts) in
+            print("成功获取 \(users.count) 个用户和 \(posts.count) 个帖子")
+        },
+        onError: { error in
+            print("组合请求失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+## 最佳实践
+
+### 错误处理
+
+始终正确处理网络错误：
+
+```swift
+networkManager.request(request) { result in
+    switch result {
+    case .success(let response):
+        // 处理成功响应
+        handleSuccess(response)
+    case .failure(let error):
+        // 根据错误类型进行不同处理
+        switch error {
+        case .networkUnreachable:
+            showNetworkErrorAlert()
+        case .timeout:
+            showTimeoutAlert()
+        case .httpError(let code):
+            handleHTTPError(code)
+        default:
+            showGenericErrorAlert()
+        }
+    }
+}
+```
+
+### 内存管理
+
+确保正确管理订阅和任务：
+
+```swift
+class MyViewController: UIViewController {
+    private var cancellables = Set<AnyCancellable>()
+    
+    func fetchData() {
+        networkManager.request(request)
+            .sink(
+                receiveCompletion: { completion in
+                    // 处理完成
+                },
+                receiveValue: { value in
+                    // 处理值
+                }
+            )
+            .store(in: &cancellables) // 存储到cancellables中，确保正确释放
+    }
+}
+```
+
+### 配置管理
+
+使用配置来管理不同的环境：
+
+```swift
+enum Environment {
+    case development
+    case staging
+    case production
+    
+    var baseURL: URL {
+        switch self {
+        case .development:
+            return URL(string: "https://dev.api.example.com")!
+        case .staging:
+            return URL(string: "https://staging.api.example.com")!
+        case .production:
+            return URL(string: "https://api.example.com")!
+        }
+    }
+}
+
+// 根据环境创建网络管理器
+let environment: Environment = .production
+var config = NetworkConfig(baseURL: environment.baseURL)
+let networkManager = NetworkManager(config: config)
 ```

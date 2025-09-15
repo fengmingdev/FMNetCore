@@ -134,5 +134,8 @@ FMNetCore is a powerful iOS network library based on Alamofire and Moya, providi
   # spec.xcconfig = { "HEADER_SEARCH_PATHS" => "$(SDKROOT)/usr/include/libxml2" }
   spec.dependency "Alamofire", "~> 5.4"
   spec.dependency "Moya", "~> 15.0"
+  spec.dependency "SwiftProtobuf", "~> 1.26"
+  spec.dependency "RxSwift", "~> 6.5"
+  spec.dependency "RxCocoa", "~> 6.5"
 
 end

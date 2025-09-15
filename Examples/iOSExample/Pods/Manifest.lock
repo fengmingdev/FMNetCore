@@ -3,18 +3,35 @@ PODS:
   - FMNetCore (1.0.0):
     - Alamofire (~> 5.4)
     - Moya (~> 15.0)
+    - RxCocoa (~> 6.5)
+    - RxSwift (~> 6.5)
+    - SwiftProtobuf (~> 1.26)
   - Moya (15.0.0):
     - Moya/Core (= 15.0.0)
   - Moya/Core (15.0.0):
     - Alamofire (~> 5.0)
+  - RxCocoa (6.9.0):
+    - RxRelay (= 6.9.0)
+    - RxSwift (= 6.9.0)
+  - RxRelay (6.9.0):
+    - RxSwift (= 6.9.0)
+  - RxSwift (6.9.0)
+  - SwiftProtobuf (1.31.0)
 
 DEPENDENCIES:
   - FMNetCore (from `../../`)
+  - RxCocoa (~> 6.5)
+  - RxSwift (~> 6.5)
+  - SwiftProtobuf (~> 1.26)
 
 SPEC REPOS:
   trunk:
     - Alamofire
     - Moya
+    - RxCocoa
+    - RxRelay
+    - RxSwift
+    - SwiftProtobuf
 
 EXTERNAL SOURCES:
   FMNetCore:
@@ -22,9 +39,13 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Alamofire: 7193b3b92c74a07f85569e1a6c4f4237291e7496
-  FMNetCore: 1de2c6af61718d64d99e75f06ee9b9123a6125cc
+  FMNetCore: 52a1a5d96082b995550d88213781c92902c9ab1d
   Moya: 138f0573e53411fb3dc17016add0b748dfbd78ee
+  RxCocoa: ac16414696ae706516be3e1ab00fcce5bdc9be8a
+  RxRelay: 6b0c930e5cef57d5fe2032571e5e65b78e3cbdb1
+  RxSwift: 31649ace6aceeb422e16ff71c60804f9c3281ed9
+  SwiftProtobuf: caa61117d9a5eeb60a52375f6685991a1fd4bd7b
 
-PODFILE CHECKSUM: 96cbad6da8d818d6a10657fafb8d2dd8e442bf97
+PODFILE CHECKSUM: 2ac6ff47532143a9b3ff1155670ed1344e6016a2
 
 COCOAPODS: 1.16.2

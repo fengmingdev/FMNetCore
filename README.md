@@ -15,6 +15,8 @@ FMNetCore 是一个功能强大的 iOS 网络库，基于 Alamofire 和 Moya 构
 - 支持协程
 - 支持网络可达性检测
 - 支持加载指示器管理
+- 支持 SwiftProtobuf（可选）
+- 支持 RxSwift（可选）
 
 ## 项目结构
 
@@ -37,8 +39,10 @@ FMNetCore/
 │   ├── NetworkManager+Coroutine.swift
 │   ├── NetworkManager.swift
 │   ├── NetworkURLSessionDelegate.swift
+│   ├── ProtobufSupport.swift
 │   ├── ReachabilityManager.swift
-│   └── ResponseHandler.swift
+│   ├── ResponseHandler.swift
+│   └── RxSwiftSupport.swift
 ├── Tests/
 │   ├── CacheManagerTests.swift
 │   ├── CodeQualityTests.swift
@@ -66,6 +70,8 @@ FMNetCore/
 │       └── iOSExample/
 │           ├── Package.swift
 │           ├── AppDelegate.swift
+│           ├── ProtobufExample.swift
+│           ├── RxSwiftExample.swift
 │           ├── ViewController.swift
 │           └── 其他示例文件
 ├── scripts/
@@ -236,6 +242,54 @@ class CustomInterceptor: NetworkInterceptor {
 
 let interceptor = CustomInterceptor()
 NetworkInterceptorManager.shared.addInterceptor(interceptor)
+```
+
+### 使用 SwiftProtobuf（可选）
+
+FMNetCore 支持使用 SwiftProtobuf 进行高效的序列化。要使用此功能，需要在项目中添加 SwiftProtobuf 依赖：
+
+```swift
+// 定义 Protobuf 请求
+struct GetUserProtobufRequest: ProtobufAPIRequest {
+    typealias Target = UserAPI
+    typealias RequestMessage = UserRequest
+    typealias ResponseMessage = UserResponse
+    
+    let userId: Int
+    
+    func buildRequestMessage() -> UserRequest? {
+        let request = UserRequest()
+        request.id = Int32(userId)
+        return request
+    }
+    
+    func parseResponseMessage(from data: Data) throws -> UserResponse {
+        return try UserResponse(serializedData: data)
+    }
+}
+```
+
+### 使用 RxSwift（可选）
+
+FMNetCore 也支持 RxSwift 进行响应式编程。要使用此功能，需要在项目中添加 RxSwift 依赖：
+
+```swift
+import RxSwift
+import RxCocoa
+
+let disposeBag = DisposeBag()
+let request = GetUsersRequest()
+
+NetworkManager.shared.rxRequest([User].self, request)
+    .subscribe(
+        onNext: { users in
+            print("成功获取 \(users.count) 个用户")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
 ```
 
 ## 文档

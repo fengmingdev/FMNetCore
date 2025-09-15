@@ -241,3 +241,339 @@ class CustomServerTrustEvaluator: ServerTrustEvaluating {
     }
 }
 ```
+
+## SwiftProtobuf 支持
+
+FMNetCore 提供了对 SwiftProtobuf 的完整支持，允许您使用 Protocol Buffers 进行高效的数据序列化。
+
+### 配置依赖
+
+要使用 SwiftProtobuf，您需要在项目中添加依赖：
+
+#### 使用 Swift Package Manager
+
+在 `Package.swift` 中添加：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/fengmingdev/FMNetCore.git", from: "1.0.0"),
+    .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.26.0")
+]
+```
+
+#### 使用 CocoaPods
+
+在 `Podfile` 中添加：
+
+```ruby
+pod 'FMNetCore', '~> 1.0'
+pod 'SwiftProtobuf', '~> 1.26'
+```
+
+### 使用 ProtobufAPIRequest
+
+创建符合 `ProtobufAPIRequest` 协议的请求：
+
+```swift
+import FMNetCore
+import SwiftProtobuf
+
+// 假设您有一个由.proto文件生成的User消息
+// message User {
+//   int32 id = 1;
+//   string name = 2;
+//   string email = 3;
+// }
+
+struct GetUserProtobufRequest: ProtobufAPIRequest {
+    typealias Target = UserAPI
+    typealias RequestMessage = User  // 由.proto生成的消息
+    typealias ResponseMessage = User // 由.proto生成的消息
+    
+    let userId: Int
+    
+    func asTarget() -> UserAPI {
+        return .getUser(id: userId)
+    }
+    
+    func buildRequestMessage() -> User? {
+        // 构建请求消息（如果需要发送数据到服务器）
+        let request = User()
+        request.id = Int32(userId)
+        return request
+    }
+    
+    func parseResponseMessage(from data: Data) throws -> User {
+        // 解析响应消息
+        return try User(serializedData: data)
+    }
+    
+    // 可选：自定义重试次数
+    var retryCount: Int? { return 2 }
+    
+    // 可选：是否需要显示加载指示器
+    var needsLoadingIndicator: Bool { true }
+}
+```
+
+### 发送 Protobuf 请求
+
+```swift
+let request = GetUserProtobufRequest(userId: 1)
+
+// 使用 Combine
+networkManager.request(request)
+    .sink(
+        receiveCompletion: { completion in
+            switch completion {
+            case .finished:
+                print("请求完成")
+            case .failure(let error):
+                print("请求失败: \(error)")
+            }
+        },
+        receiveValue: { user in
+            print("成功获取用户: \(user.name)")
+        }
+    )
+    .store(in: &cancellables)
+
+// 使用回调方式
+networkManager.requestWithLoading(request) { result in
+    switch result {
+    case .success(let user):
+        print("成功获取用户: \(user.name)")
+    case .failure(let error):
+        print("获取用户失败: \(error)")
+    }
+}
+```
+
+### Protobuf 缓存支持
+
+FMNetCore 的 Protobuf 支持也包含缓存功能：
+
+```swift
+// 使用缓存发送请求
+networkManager.request(request, useCache: true)
+    .sink(
+        receiveCompletion: { completion in
+            // 处理完成
+        },
+        receiveValue: { user in
+            // 处理用户数据
+        }
+    )
+    .store(in: &cancellables)
+```
+
+## RxSwift 支持
+
+FMNetCore 提供了对 RxSwift 的完整支持，允许您使用响应式编程模式。
+
+### 配置依赖
+
+要使用 RxSwift，您需要在项目中添加依赖：
+
+#### 使用 Swift Package Manager
+
+在 `Package.swift` 中添加：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/fengmingdev/FMNetCore.git", from: "1.0.0"),
+    .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.5.0")
+]
+```
+
+#### 使用 CocoaPods
+
+在 `Podfile` 中添加：
+
+```ruby
+pod 'FMNetCore', '~> 1.0'
+pod 'RxSwift', '~> 6.5'
+pod 'RxCocoa', '~> 6.5'
+```
+
+### 使用 RxSwift 扩展
+
+FMNetCore 提供了多种 RxSwift 扩展方法：
+
+#### 基本请求
+
+```swift
+import FMNetCore
+import RxSwift
+import RxCocoa
+
+let disposeBag = DisposeBag()
+let request = GetUsersRequest()
+
+NetworkManager.shared.rxRequest([User].self, request)
+    .subscribe(
+        onNext: { users in
+            print("成功获取 \(users.count) 个用户")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        },
+        onCompleted: {
+            print("请求完成")
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+#### Protobuf 请求
+
+```swift
+// 发送Protobuf请求
+let protobufRequest = GetUserProtobufRequest(userId: 1)
+
+NetworkManager.shared.rxRequest(protobufRequest)
+    .subscribe(
+        onNext: { user in
+            print("成功获取用户: \(user.name)")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+#### 组合请求
+
+```swift
+let usersRequest = GetUsersRequest()
+let postsRequest = GetPostsRequest()
+
+NetworkManager.shared.rxCombinedRequest([User].self, [Post].self, usersRequest, postsRequest)
+    .subscribe(
+        onNext: { (users, posts) in
+            print("成功获取 \(users.count) 个用户和 \(posts.count) 个帖子")
+        },
+        onError: { error in
+            print("组合请求失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+#### 与 UI 绑定
+
+```swift
+let searchTextField = UITextField()
+let resultLabel = UILabel()
+let activityIndicator = UIActivityIndicatorView()
+
+// 设置UI
+searchTextField.placeholder = "搜索用户..."
+resultLabel.text = "请输入搜索关键词"
+
+// 使用RxCocoa绑定
+searchTextField.rx.text
+    .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+    .compactMap { $0 }
+    .filter { !$0.isEmpty }
+    .distinctUntilChanged()
+    .do(onNext: { _ in
+        activityIndicator.startAnimating()
+    })
+    .flatMapLatest { query -> Observable<[User]> in
+        let request = SearchUsersRequest(query: query)
+        return NetworkManager.shared.rxRequest([User].self, request)
+            .catchAndReturn([])
+    }
+    .do(onNext: { _ in
+        activityIndicator.stopAnimating()
+    })
+    .map { users in "找到 \(users.count) 个用户" }
+    .bind(to: resultLabel.rx.text)
+    .disposed(by: disposeBag)
+
+// 错误处理示例
+searchTextField.rx.text
+    .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+    .compactMap { $0 }
+    .filter { !$0.isEmpty }
+    .distinctUntilChanged()
+    .flatMapLatest { query -> Observable<[User]> in
+        let request = SearchUsersRequest(query: query)
+        return NetworkManager.shared.rxRequest([User].self, request)
+    }
+    .subscribe(
+        onNext: { users in
+            resultLabel.text = "找到 \(users.count) 个用户"
+        },
+        onError: { error in
+            resultLabel.text = "搜索失败: \(error.localizedDescription)"
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+#### 重试和错误处理
+
+```swift
+let request = GetUsersRequest()
+
+// 重试机制
+NetworkManager.shared.rxRequest([User].self, request)
+    .retry(3) // 重试3次
+    .subscribe(
+        onNext: { users in
+            print("成功获取 \(users.count) 个用户")
+        },
+        onError: { error in
+            print("获取用户失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+
+// 错误恢复
+NetworkManager.shared.rxRequest([User].self, request)
+    .catchAndReturn([]) // 错误时返回空数组
+    .subscribe(
+        onNext: { users in
+            print("获取用户结果: \(users.count) 个用户")
+        }
+    )
+    .disposed(by: disposeBag)
+```
+
+#### 轮询请求
+
+```swift
+// 创建一个定时轮询的Observable
+extension NetworkManager {
+    /// 创建一个定时轮询的Observable
+    /// - Parameters:
+    ///   - request: 请求对象
+    ///   - interval: 轮询间隔
+    /// - Returns: Observable
+    public func rxPollingRequest<T: Decodable, R: APIRequest>(
+        _ request: R,
+        interval: RxTimeInterval
+    ) -> Observable<T> {
+        return Observable<Int>
+            .interval(interval, scheduler: MainScheduler.instance)
+            .flatMapLatest { _ in
+                return self.rxRequest(T.self, request)
+            }
+    }
+}
+
+// 使用轮询
+NetworkManager.shared.rxPollingRequest([User].self, GetUsersRequest(), interval: .seconds(10))
+    .subscribe(
+        onNext: { users in
+            print("轮询获取到 \(users.count) 个用户")
+        },
+        onError: { error in
+            print("轮询失败: \(error)")
+        }
+    )
+    .disposed(by: disposeBag)
+```
