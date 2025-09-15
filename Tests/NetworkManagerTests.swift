@@ -8,7 +8,7 @@
 import XCTest
 import Combine
 import Moya
-@testable import Networking
+@testable import FMNetCore
 
 final class NetworkManagerTests: XCTestCase {
     var networkManager: NetworkManager!
@@ -117,5 +117,71 @@ final class NetworkManagerTests: XCTestCase {
         XCTAssertEqual(config.retryInterval, 2.0)
         XCTAssertEqual(config.slowNetworkThreshold, 5.0)
         XCTAssertEqual(config.headers["Authorization"], "Bearer token")
+    }
+    
+    // 新增的测试用例
+    
+    func testSmartRetryStrategy() throws {
+        let strategy = AdaptiveRetryStrategy()
+        
+        // 测试重试延迟计算
+        let delay = strategy.calculateRetryDelay(for: 0, with: .timeout)
+        XCTAssertTrue(delay >= 1.0)
+        
+        // 测试是否应该重试
+        let shouldRetry = strategy.shouldRetry(for: 0, maxRetries: 3, with: .timeout)
+        XCTAssertTrue(shouldRetry)
+    }
+    
+    func testPerformanceMonitor() throws {
+        let monitor = PerformanceMonitor.shared
+        
+        // 测试配置
+        var config = PerformanceMonitorConfig()
+        config.enabled = true
+        config.performanceThreshold = 1000
+        monitor.configure(with: config)
+        
+        let currentConfig = monitor.getCurrentConfig()
+        XCTAssertEqual(currentConfig.enabled, true)
+        XCTAssertEqual(currentConfig.performanceThreshold, 1000)
+    }
+    
+    func testEnvironmentManager() throws {
+        let manager = EnvironmentManager.shared
+        
+        // 测试获取当前环境
+        let currentEnv = manager.getCurrentEnvironment()
+        XCTAssertNotNil(currentEnv)
+        
+        // 测试获取所有配置
+        let configs = manager.getAllConfigs()
+        XCTAssertFalse(configs.isEmpty)
+    }
+    
+    func testLocalizationManager() throws {
+        let manager = LocalizationManager.shared
+        
+        // 测试获取当前语言
+        let languageCode = manager.currentLanguageCode()
+        XCTAssertFalse(languageCode.isEmpty)
+        
+        // 测试本地化字符串
+        let localizedString = manager.localizedString(for: "network.error.invalid_url", defaultValue: "Invalid URL")
+        XCTAssertFalse(localizedString.isEmpty)
+    }
+    
+    func testVersionManager() throws {
+        let manager = VersionManager.shared
+        
+        // 测试设置和获取当前API版本
+        manager.setCurrentAPIVersion(.v2)
+        let currentVersion = manager.getCurrentAPIVersion()
+        XCTAssertEqual(currentVersion, .v2)
+        
+        // 测试兼容性策略
+        manager.setCompatibilityStrategy(.strict)
+        let strategy = manager.getCompatibilityStrategy()
+        XCTAssertEqual(strategy, .strict)
     }
 }

@@ -44,13 +44,14 @@ public final class MoyaNetworkLoggerPlugin: PluginType {
     public func willSend(_ request: RequestType, target: TargetType) {
         #if DEBUG
         // 创建日志消息
-        var logMessage = "\n🚀 [网络请求开始]\n"
-        logMessage += "🌐 方法: \(target.method)\n"
-        logMessage += "🔗 URL: \(target.baseURL)\(target.path)\n"
+        var logMessage = "\n"
+        logMessage += LocalizationManager.shared.localizedString(for: LocalizationKey.requestSending.rawValue, defaultValue: "🚀 [网络请求开始]\n")
+        logMessage += LocalizationManager.shared.localizedString(for: "network.log.method", defaultValue: "🌐 方法: \(target.method)\n")
+        logMessage += LocalizationManager.shared.localizedString(for: "network.log.url", defaultValue: "🔗 URL: \(target.baseURL)\(target.path)\n")
         
         // 记录请求头
         if let headers = target.headers, !headers.isEmpty {
-            logMessage += "📋 请求头:\n"
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.request_headers", defaultValue: "📋 请求头:\n")
             for (key, value) in headers {
                 logMessage += "   \(key): \(value)\n"
             }
@@ -58,7 +59,7 @@ public final class MoyaNetworkLoggerPlugin: PluginType {
         
         // 记录请求参数
         if case .requestParameters(let parameters, _) = target.task {
-            logMessage += "📦 请求参数:\n"
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.request_parameters", defaultValue: "📦 请求参数:\n")
             for (key, value) in parameters {
                 logMessage += "   \(key): \(value)\n"
             }
@@ -78,14 +79,15 @@ public final class MoyaNetworkLoggerPlugin: PluginType {
         switch result {
         case .success(let response):
             // 创建成功日志消息
-            var logMessage = "\n✅ [请求成功]\n"
-            logMessage += "🌐 方法: \(target.method)\n"
-            logMessage += "🔗 URL: \(target.baseURL)\(target.path)\n"
-            logMessage += "🔢 状态码: \(response.statusCode)\n"
+            var logMessage = "\n"
+            logMessage += LocalizationManager.shared.localizedString(for: LocalizationKey.requestSuccess.rawValue, defaultValue: "✅ [请求成功]\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.method", defaultValue: "🌐 方法: \(target.method)\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.url", defaultValue: "🔗 URL: \(target.baseURL)\(target.path)\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.status_code", defaultValue: "🔢 状态码: \(response.statusCode)\n")
             
             // 记录响应头
             if let headers = response.response?.allHeaderFields, !headers.isEmpty {
-                logMessage += "📋 响应头:\n"
+                logMessage += LocalizationManager.shared.localizedString(for: "network.log.response_headers", defaultValue: "📋 响应头:\n")
                 for (key, value) in headers {
                     if let key = key as? String, let value = value as? String {
                         logMessage += "   \(key): \(value)\n"
@@ -98,10 +100,11 @@ public final class MoyaNetworkLoggerPlugin: PluginType {
             
         case .failure(let error):
             // 创建失败日志消息
-            var logMessage = "\n❌ [请求失败]\n"
-            logMessage += "🌐 方法: \(target.method)\n"
-            logMessage += "🔗 URL: \(target.baseURL)\(target.path)\n"
-            logMessage += "💥 错误: \(error)\n"
+            var logMessage = "\n"
+            logMessage += LocalizationManager.shared.localizedString(for: LocalizationKey.requestFailure.rawValue, defaultValue: "❌ [请求失败]\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.method", defaultValue: "🌐 方法: \(target.method)\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.url", defaultValue: "🔗 URL: \(target.baseURL)\(target.path)\n")
+            logMessage += LocalizationManager.shared.localizedString(for: "network.log.error", defaultValue: "💥 错误: \(error)\n")
             
             // 使用NetworkLogger记录日志而不是直接print
             NetworkLogger.shared.log(.error, message: logMessage)

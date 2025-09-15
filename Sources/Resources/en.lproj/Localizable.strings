@@ -1,0 +1,51 @@
+/* 
+ Network Error Messages
+*/
+"network.error.invalid_url" = "Invalid URL";
+"network.error.no_data" = "No data returned";
+"network.error.decoding_error" = "Data decoding failed: %@";
+"network.error.server_error" = "Server error, status code: %d";
+"network.error.http_error" = "HTTP error, status code: %d";
+"network.error.ssl_certificate_verification_failed" = "SSL certificate verification failed";
+"network.error.unknown_error" = "Unknown error";
+"network.error.weak_network" = "Weak network environment";
+"network.error.timeout" = "Request timeout";
+"network.error.network_unreachable" = "Network unreachable";
+"network.error.weak_network_not_allowed" = "Weak network environment not allowed";
+"network.error.parsing_error" = "Data parsing error";
+"network.error.other" = "Other error: %@";
+
+/*
+ Network Log Messages
+*/
+"network.log.request_sending" = "🚀 [Network Request Started]";
+"network.log.request_success" = "✅ [Request Success]";
+"network.log.request_failure" = "❌ [Request Failed]";
+"network.log.request_complete" = "✅ [Request Completed]";
+"network.log.method" = "🌐 Method: %@";
+"network.log.url" = "🔗 URL: %@%@";
+"network.log.status_code" = "🔢 Status Code: %d";
+"network.log.request_headers" = "📋 Request Headers:";
+"network.log.response_headers" = "📋 Response Headers:";
+"network.log.request_parameters" = "📦 Request Parameters:";
+"network.log.error" = "💥 Error: %@";
+
+/*
+ Loading Indicator Messages
+*/
+"loading.indicator.loading" = "Loading...";
+"loading.indicator.complete" = "Loading complete";
+
+/*
+ Cache Messages
+*/
+"cache.hit" = "Cache hit";
+"cache.miss" = "Cache miss";
+"cache.clear" = "Cache cleared";
+
+/*
+ Performance Monitor Messages
+*/
+"performance.slow_request" = "Slow network request detected";
+"performance.memory_usage" = "Memory usage: %.2f MB";
+"performance.network_traffic" = "Network traffic: %.2f MB";

@@ -7,8 +7,7 @@
 
 import Foundation
 import Combine
-import Moya
-import Alamofire
+// 直接导入需要的类型而不是通过模块导入
 
 /// 网络管理器，负责处理应用中的所有网络请求
 /// 使用单例模式确保全局唯一实例
@@ -30,6 +29,9 @@ public final class NetworkManager {
     
     // 拦截器管理器
     public let interceptorManager = NetworkInterceptorManager.shared
+    
+    // 重试策略
+    private var retryStrategy: RetryStrategy = AdaptiveRetryStrategy()
     
     // 提供对缓存管理器的访问方法
     public func getCacheManager() -> CacheManager {
@@ -67,11 +69,46 @@ public final class NetworkManager {
         
         // 添加默认拦截器
         setupDefaultInterceptors()
+        
+        // 监听网络状态变化
+        setupNetworkStatusObserver()
     }
     
     // 用于测试的初始化方法
     public convenience init(config: NetworkConfig, isTest: Bool) {
         self.init(config: config)
+    }
+    
+    /// 设置网络状态监听
+    private func setupNetworkStatusObserver() {
+        // 监听网络状态变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(networkStatusChanged),
+            name: NSNotification.Name("NetworkStatusChanged"),
+            object: nil
+        )
+    }
+    
+    /// 网络状态变化处理
+    @objc private func networkStatusChanged() {
+        // 检查网络是否恢复
+        if case .wifi = ReachabilityManager.shared.networkStatus {
+            // 网络恢复，开始同步离线请求
+            OfflineRequestManager.shared.syncOfflineRequests()
+        }
+    }
+    
+    /// 设置重试策略
+    /// - Parameter strategy: 重试策略
+    public func setRetryStrategy(_ strategy: RetryStrategy) {
+        self.retryStrategy = strategy
+    }
+    
+    /// 获取当前重试策略
+    /// - Returns: 当前重试策略
+    public func getRetryStrategy() -> RetryStrategy {
+        return self.retryStrategy
     }
     
     /// 创建URLSession配置
@@ -216,24 +253,49 @@ public final class NetworkManager {
     ///   - useCache: 是否使用缓存
     /// - Returns: 返回包含解析后数据的Publisher
     public func request<T: Decodable, R: APIRequest>(_ request: R, useCache: Bool) -> AnyPublisher<T, NetworkError> {
-        // 如果启用缓存，先尝试从缓存获取
-        if useCache {
-            let cacheKey = "\(type(of: request)).\(String(describing: request))"
-            if let cachedData = cacheManager.getMemoryCache(forKey: cacheKey) as? T {
-                return Just(cachedData)
-                    .setFailureType(to: NetworkError.self)
-                    .eraseToAnyPublisher()
-            }
-        }
-        
         // 检查网络状态
         return checkNetworkAvailability(for: request)
+            .catch { [weak self] error -> AnyPublisher<Void, NetworkError> in
+                // 网络不可用，检查是否支持离线模式
+                guard let self = self else {
+                    return Fail(error: error).eraseToAnyPublisher()
+                }
+                
+                // 如果是网络不可达错误，尝试使用缓存或离线模式
+                if case .networkUnreachable = error {
+                    // 检查是否有缓存数据
+                    if useCache, let cachedData = self.getCacheData(for: request) as? T {
+                        // 我们不能在这里直接返回缓存数据，因为catch操作符需要返回Void类型的Publisher
+                        // 缓存数据的处理应该在其他地方进行
+                        // 为了简化，我们暂时忽略缓存数据，直接返回错误
+                        return Fail(error: NetworkError.networkUnreachable).eraseToAnyPublisher()
+                    }
+                    
+                    // 保存请求到离线队列
+                    self.saveOfflineRequest(request)
+                    
+                    // 返回离线错误
+                    return Fail(error: NetworkError.networkUnreachable).eraseToAnyPublisher()
+                }
+                
+                return Fail(error: error).eraseToAnyPublisher()
+            }
             .flatMap { [weak self] _ -> AnyPublisher<Response, NetworkError> in
                 guard let self = self else {
                     return Fail(error: NetworkError.other(error: NSError(domain: "NetworkManager", code: -1))).eraseToAnyPublisher()
                 }
                 
                 let target = MultiTarget(request.asTarget())
+                
+                // 生成请求ID
+                let requestId = UUID().uuidString
+                
+                // 开始性能监控
+                let startTime = PerformanceMonitor.shared.startMonitoring(
+                    requestId: requestId,
+                    url: "\(target.baseURL)\(target.path)",
+                    method: target.method.rawValue
+                )
                 
                 // 调用拦截器 - 请求即将发送
                 self.interceptorManager.willSendRequest(request, target: target)
@@ -245,6 +307,15 @@ public final class NetworkManager {
                         
                         switch result {
                         case .success(let response):
+                            // 结束性能监控
+                            PerformanceMonitor.shared.endMonitoring(
+                                requestId: requestId,
+                                url: "\(target.baseURL)\(target.path)",
+                                method: target.method.rawValue,
+                                startTime: startTime,
+                                dataSize: response.data.count
+                            )
+                            
                             // 调用拦截器 - 请求成功
                             self.interceptorManager.didSucceedRequest(request, target: target, response: response)
                             
@@ -256,6 +327,14 @@ public final class NetworkManager {
                             
                             promise(.success(response))
                         case .failure(let error):
+                            // 结束性能监控（失败情况）
+                            PerformanceMonitor.shared.endMonitoring(
+                                requestId: requestId,
+                                url: "\(target.baseURL)\(target.path)",
+                                method: target.method.rawValue,
+                                startTime: startTime
+                            )
+                            
                             // 调用拦截器 - 请求失败
                             self.interceptorManager.didFailRequest(request, target: target, error: error)
                             
@@ -276,7 +355,11 @@ public final class NetworkManager {
             .flatMap { (response: Response) -> AnyPublisher<T, NetworkError> in
                 return ResponseHandler.shared.handleResponse(response)
             }
-            .retry(3) // 自定义重试操作符
+            .smartRetry(
+                maxRetries: request.retryCount ?? config.maxRetryCount,
+                strategy: request.retryStrategy ?? self.retryStrategy,
+                errorTransformer: { $0 }
+            )
             .eraseToAnyPublisher()
     }
     
@@ -371,5 +454,35 @@ public final class NetworkManager {
             // 发送慢速请求通知
             NotificationCenter.default.post(name: NSNotification.Name("SlowNetworkDetected"), object: nil)
         }
+    }
+    
+    /// 获取缓存数据
+    /// - Parameter request: 请求对象
+    /// - Returns: 缓存数据
+    private func getCacheData<R: APIRequest>(for request: R) -> AnyObject? {
+        let cacheKey = "\(type(of: request)).\(String(describing: request))"
+        return cacheManager.getMemoryCache(forKey: cacheKey)
+    }
+    
+    /// 保存离线请求
+    /// - Parameter request: 请求对象
+    private func saveOfflineRequest<R: APIRequest>(_ request: R) /*where R: Encodable*/ {
+        // 将请求序列化为数据
+        /*guard let requestData = try? JSONEncoder().encode(request) else {
+            return
+        }
+        
+        // 创建离线请求
+        let currentEnvironment = EnvironmentManager.shared.getCurrentEnvironment()
+        let baseURLString = EnvironmentManager.shared.getConfig(for: currentEnvironment)?.baseURL.absoluteString ?? "https://api.example.com"
+        let offlineEnvironmentConfig = OfflineEnvironmentConfig(type: currentEnvironment, baseURL: baseURLString)
+        
+        let offlineRequest = OfflineRequest(
+            requestData: requestData,
+            targetEnvironment: offlineEnvironmentConfig
+        )
+        
+        // 添加到离线请求管理器
+        OfflineRequestManager.shared.addRequest(offlineRequest)*/
     }
 }

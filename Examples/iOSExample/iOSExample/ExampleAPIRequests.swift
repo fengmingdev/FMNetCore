@@ -57,7 +57,7 @@ extension UserAPI: TargetType {
 }
 
 // 获取单个用户的请求实现
-struct GetUserRequest: APIRequest {
+struct GetUserRequest: APIRequest, Encodable {
     typealias Target = UserAPI
     
     let userId: Int

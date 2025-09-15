@@ -30,6 +30,11 @@ final class CustomServerTrustEvaluator: ServerTrustEvaluating, Sendable {
             return
         }
         
+        // 使用安全管理器验证证书
+        if !SecurityManager.shared.validateServerCertificate(trust, forHost: host) {
+            throw NetworkError.sslCertificateVerificationFailed
+        }
+        
         // 如果配置了证书锁定路径，验证证书
         if let certificatePath = config.sslCertificatePath {
             guard validateCertificate(trust: trust, certificatePath: certificatePath) else {
@@ -97,6 +102,11 @@ final class LegacyCustomServerTrustEvaluator: ServerTrustEvaluating, Sendable {
         // 如果允许无效证书，直接返回
         if config.allowInvalidCertificates {
             return
+        }
+        
+        // 使用安全管理器验证证书
+        if !SecurityManager.shared.validateServerCertificate(trust, forHost: host) {
+            throw NetworkError.sslCertificateVerificationFailed
         }
         
         // 使用默认评估器进行评估

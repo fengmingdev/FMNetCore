@@ -1,0 +1,51 @@
+/* 
+ 网络错误消息
+*/
+"network.error.invalid_url" = "无效的URL";
+"network.error.no_data" = "无数据返回";
+"network.error.decoding_error" = "数据解码失败: %@";
+"network.error.server_error" = "服务器错误，状态码: %d";
+"network.error.http_error" = "HTTP错误，状态码: %d";
+"network.error.ssl_certificate_verification_failed" = "SSL证书验证失败";
+"network.error.unknown_error" = "未知错误";
+"network.error.weak_network" = "弱网环境";
+"network.error.timeout" = "请求超时";
+"network.error.network_unreachable" = "网络不可达";
+"network.error.weak_network_not_allowed" = "弱网环境不被允许";
+"network.error.parsing_error" = "数据解析错误";
+"network.error.other" = "其他错误: %@";
+
+/*
+ 网络日志消息
+*/
+"network.log.request_sending" = "🚀 [网络请求开始]";
+"network.log.request_success" = "✅ [请求成功]";
+"network.log.request_failure" = "❌ [请求失败]";
+"network.log.request_complete" = "✅ [请求完成]";
+"network.log.method" = "🌐 方法: %@";
+"network.log.url" = "🔗 URL: %@%@";
+"network.log.status_code" = "🔢 状态码: %d";
+"network.log.request_headers" = "📋 请求头:";
+"network.log.response_headers" = "📋 响应头:";
+"network.log.request_parameters" = "📦 请求参数:";
+"network.log.error" = "💥 错误: %@";
+
+/*
+ 加载指示器消息
+*/
+"loading.indicator.loading" = "加载中...";
+"loading.indicator.complete" = "加载完成";
+
+/*
+ 缓存消息
+*/
+"cache.hit" = "缓存命中";
+"cache.miss" = "缓存未命中";
+"cache.clear" = "缓存已清除";
+
+/*
+ 性能监控消息
+*/
+"performance.slow_request" = "检测到慢速网络请求";
+"performance.memory_usage" = "内存使用: %.2f MB";
+"performance.network_traffic" = "网络流量: %.2f MB";

@@ -115,10 +115,20 @@ open class DefaultLoadingIndicator: LoadingIndicator {
         loadingView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         loadingView.frame = UIScreen.main.bounds
         
+        // 添加可访问性支持
+        loadingView.isAccessibilityElement = true
+        loadingView.accessibilityLabel = LocalizationManager.shared.localizedString(for: "loading.indicator.loading", defaultValue: "Loading...")
+        loadingView.accessibilityTraits = [.updatesFrequently]
+        
         let indicator = UIActivityIndicatorView(style: .large)
         indicator.color = .white
         indicator.center = loadingView.center
         indicator.startAnimating()
+        
+        // 为指示器添加可访问性支持
+        indicator.isAccessibilityElement = true
+        indicator.accessibilityLabel = LocalizationManager.shared.localizedString(for: "loading.indicator.loading", defaultValue: "Loading...")
+        indicator.accessibilityTraits = [.updatesFrequently]
         
         loadingView.addSubview(indicator)
         self.keyWindow?.addSubview(loadingView)

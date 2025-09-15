@@ -17,6 +17,14 @@ FMNetCore 是一个功能强大的 iOS 网络库，基于 Alamofire 和 Moya 构
 - 支持可自定义的加载指示器管理
 - 支持 SwiftProtobuf（可选）
 - 支持 RxSwift（可选）
+- **智能重试机制** - 根据错误类型和网络状况自动调整重试策略
+- **安全特性** - 支持证书锁定和客户端证书认证
+- **性能监控** - 全面的性能监控功能
+- **多环境配置管理** - 方便在不同环境间切换
+- **离线处理** - 支持离线请求处理和同步
+- **国际化支持** - 支持多语言错误消息和日志
+- **可访问性支持** - 支持VoiceOver和动态字体大小
+- **向后兼容性** - 完善的版本管理机制
 
 ## 项目结构
 
@@ -42,7 +50,20 @@ FMNetCore/
 │   ├── ProtobufSupport.swift
 │   ├── ReachabilityManager.swift
 │   ├── ResponseHandler.swift
-│   └── RxSwiftSupport.swift
+│   ├── RxSwiftSupport.swift
+│   ├── SmartRetryStrategy.swift
+│   ├── SmartRetryPublisher.swift
+│   ├── SecurityManager.swift
+│   ├── PerformanceMonitor.swift
+│   ├── EnvironmentManager.swift
+│   ├── OfflineRequestManager.swift
+│   ├── LocalizationManager.swift
+│   ├── VersionManager.swift
+│   └── Resources/
+│       ├── en.lproj/
+│       │   └── Localizable.strings
+│       └── zh-Hans.lproj/
+│           └── Localizable.strings
 ├── Tests/
 │   ├── CacheManagerTests.swift
 │   ├── CodeQualityTests.swift
@@ -51,7 +72,13 @@ FMNetCore/
 │   ├── NetworkURLSessionDelegateTests.swift
 │   ├── NetworkingTests.swift
 │   ├── ProxyConfigTests.swift
-│   └── ReachabilityManagerTests.swift
+│   ├── ReachabilityManagerTests.swift
+│   ├── SmartRetryTests.swift
+│   ├── PerformanceMonitorTests.swift
+│   ├── EnvironmentManagerTests.swift
+│   ├── OfflineRequestManagerTests.swift
+│   ├── LocalizationManagerTests.swift
+│   └── VersionManagerTests.swift
 ├── Documentation/
 │   ├── APIReference.md
 │   ├── AdvancedUsage.md
@@ -73,7 +100,23 @@ FMNetCore/
 │           ├── ProtobufExample.swift
 │           ├── RxSwiftExample.swift
 │           ├── ViewController.swift
-│           └── 其他示例文件
+│           ├── ExampleAPIRequests.swift
+│           ├── CustomLoadingIndicatorExample.swift
+│           ├── NetworkExamplesViewController.swift
+│           ├── NetworkLogViewController.swift
+│           ├── NetworkSimulation.swift
+│           ├── CacheStatsViewController.swift
+│           ├── WeakNetworkMonitorViewController.swift
+│           ├── WeakNetworkTestViewController.swift
+│           ├── WeakNetworkUsageExample.swift
+│           ├── SmartRetryExample.swift
+│           ├── SecurityExample.swift
+│           ├── PerformanceMonitorExample.swift
+│           ├── EnvironmentManagerExample.swift
+│           ├── OfflineHandlingExample.swift
+│           ├── LocalizationExample.swift
+│           ├── AccessibilityExample.swift
+│           └── VersionManagementExample.swift
 ├── scripts/
 │   ├── setup.sh
 │   ├── run-example.sh
@@ -365,6 +408,177 @@ let tasks = LoadingIndicatorManager.shared.getAllTasks()
 
 // 取消所有加载指示器
 LoadingIndicatorManager.shared.cancelAllLoading()
+```
+
+### 智能重试机制
+
+FMNetCore 提供了智能重试机制，可以根据错误类型和网络状况自动调整重试策略：
+
+```swift
+// 使用自定义重试策略
+let exponentialStrategy = ExponentialBackoffRetryStrategy(baseDelay: 1.0, maxDelay: 60.0, multiplier: 2.0)
+let adaptiveStrategy = AdaptiveRetryStrategy(exponentialStrategy: exponentialStrategy)
+
+// 设置全局重试策略
+NetworkManager.shared.setRetryStrategy(adaptiveStrategy)
+
+// 或者为特定请求设置重试策略
+struct CustomRequest: APIRequest {
+    typealias Target = MyAPI
+    
+    func asTarget() -> MyAPI {
+        return .getData
+    }
+    
+    var retryStrategy: RetryStrategy? {
+        return CustomRetryStrategy()
+    }
+    
+    var retryCount: Int? {
+        return 5
+    }
+}
+```
+
+### 安全特性
+
+FMNetCore 提供了完善的安全特性，包括证书锁定和客户端证书认证：
+
+```swift
+// 配置证书锁定
+var securityConfig = SecurityConfig()
+securityConfig.enableCertificatePinning = true
+securityConfig.certificatePinningMode = .publicKey
+securityConfig.certificatePaths = ["path/to/certificate.cer"]
+
+SecurityManager.shared.configure(with: securityConfig)
+
+// 配置客户端证书认证
+var securityConfig = SecurityConfig()
+securityConfig.enableClientCertificateAuthentication = true
+securityConfig.clientCertificatePath = "path/to/client-certificate.p12"
+securityConfig.clientCertificatePassword = "certificate-password"
+
+SecurityManager.shared.configure(with: securityConfig)
+```
+
+### 性能监控
+
+FMNetCore 提供了全面的性能监控功能，帮助您优化网络请求性能：
+
+```swift
+// 配置性能监控
+var performanceConfig = PerformanceMonitorConfig()
+performanceConfig.enabled = true
+performanceConfig.detailedMetrics = true
+performanceConfig.logLevel = .verbose
+performanceConfig.performanceThreshold = 3000 // 3秒阈值
+
+PerformanceMonitor.shared.configure(with: performanceConfig)
+
+// 获取性能指标
+let allMetrics = PerformanceMonitor.shared.getAllMetrics()
+let overThresholdMetrics = PerformanceMonitor.shared.getOverThresholdMetrics()
+let stats = PerformanceMonitor.shared.getPerformanceStats()
+```
+
+### 多环境配置管理
+
+FMNetCore 支持多环境配置管理，方便在不同环境间切换：
+
+```swift
+// 添加自定义环境配置
+let customConfig = EnvironmentConfig(
+    type: .staging,
+    baseURL: URL(string: "https://staging.api.example.com")!,
+    apiVersion: "v1",
+    timeoutInterval: 20.0,
+    enableLogging: true,
+    logLevel: .info,
+    maxRetryCount: 2,
+    enableCache: true,
+    customConfig: ["staging": true]
+)
+
+EnvironmentManager.shared.addConfig(customConfig, for: .staging)
+
+// 切换到特定环境
+EnvironmentManager.shared.setCurrentEnvironment(.staging)
+```
+
+### 离线处理
+
+FMNetCore 支持离线请求处理，确保在网络恢复后自动同步请求：
+
+```swift
+// 获取离线请求统计信息
+let stats = OfflineRequestManager.shared.getStats()
+
+// 同步离线请求
+OfflineRequestManager.shared.syncOfflineRequests()
+
+// 清除已完成的请求
+OfflineRequestManager.shared.removeCompletedRequests()
+```
+
+### 国际化支持
+
+FMNetCore 提供了完整的国际化支持，支持多语言错误消息和日志：
+
+```swift
+// 切换到中文
+LocalizationManager.shared.switchLanguage(to: "zh-Hans")
+
+// 切换到英文
+LocalizationManager.shared.switchLanguage(to: "en")
+
+// 获取本地化错误消息
+let errorMessage = NetworkError.timeout.localizedDescription
+
+// 获取自定义本地化字符串
+let customMessage = LocalizationManager.shared.localizedString(for: "custom.key", defaultValue: "Default Value")
+```
+
+### 可访问性支持
+
+FMNetCore 支持VoiceOver和动态字体大小，确保应用对所有用户都可访问：
+
+```swift
+// 检查VoiceOver是否运行
+if UIAccessibility.isVoiceOverRunning {
+    // VoiceOver正在运行
+}
+
+// 使用VoiceOver朗读文本
+UIAccessibility.post(notification: .announcement, argument: "可访问的文本")
+```
+
+### 向后兼容性
+
+FMNetCore 提供了完善的版本管理机制，确保API的向后兼容性：
+
+```swift
+// 设置当前API版本
+VersionManager.shared.setCurrentAPIVersion(.v2)
+
+// 废弃特定版本
+VersionManager.shared.deprecateVersion(.v1)
+
+// 获取API端点URL
+let endpoint = VersionManager.shared.getAPIEndpoint(basePath: "https://api.example.com/")
+
+// 实现版本化API请求
+struct VersionedRequest: VersionedAPIRequest {
+    typealias Target = MyAPI
+    
+    func asTarget() -> MyAPI {
+        return .getData
+    }
+    
+    var apiVersion: APIVersion? {
+        return .v2
+    }
+}
 ```
 
 ### 使用 SwiftProtobuf（可选）

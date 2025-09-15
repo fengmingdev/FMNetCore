@@ -91,6 +91,9 @@ public struct NetworkConfig: Sendable {
     /// 是否允许无效SSL证书
     public var allowInvalidCertificates: Bool = false
     
+    /// 安全配置
+    public var securityConfig: SecurityConfig = SecurityConfig()
+    
     /// 初始化网络配置
     /// - Parameter baseURL: 基础URL
     public init(baseURL: URL) {

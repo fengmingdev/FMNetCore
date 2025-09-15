@@ -163,6 +163,46 @@ class NetworkExamplesViewController: UIViewController {
                 title: "Toast-Swift加载指示器",
                 description: "演示使用Toast-Swift库的自定义加载指示器",
                 action: demonstrateToastSwiftLoadingIndicator
+            ),
+            Example(
+                title: "智能重试示例",
+                description: "演示使用自定义重试策略的智能重试功能",
+                action: demonstrateSmartRetry
+            ),
+            Example(
+                title: "安全特性示例",
+                description: "演示证书锁定和客户端证书认证等安全特性",
+                action: demonstrateSecurityFeatures
+            ),
+            Example(
+                title: "性能监控示例",
+                description: "演示请求性能监控和指标收集",
+                action: demonstratePerformanceMonitoring
+            ),
+            Example(
+                title: "环境配置管理示例",
+                description: "演示多环境配置管理和切换",
+                action: demonstrateEnvironmentManagement
+            ),
+            Example(
+                title: "离线处理示例",
+                description: "演示离线请求处理和同步",
+                action: demonstrateOfflineHandling
+            ),
+            Example(
+                title: "国际化示例",
+                description: "演示多语言支持和本地化",
+                action: demonstrateLocalization
+            ),
+            Example(
+                title: "可访问性示例",
+                description: "演示VoiceOver支持和动态字体大小",
+                action: demonstrateAccessibility
+            ),
+            Example(
+                title: "版本管理示例",
+                description: "演示API版本管理和向后兼容性",
+                action: demonstrateVersionManagement
             )
         ]
     }
@@ -458,7 +498,63 @@ class NetworkExamplesViewController: UIViewController {
         showAlert(title: "依赖缺失", message: "Toast-Swift库未找到，请确保已安装该依赖")
         #endif
     }
-
+    
+    /// 智能重试示例
+    private func demonstrateSmartRetry() {
+        // 创建智能重试示例视图控制器
+        let smartRetryVC = SmartRetryExampleViewController()
+        navigationController?.pushViewController(smartRetryVC, animated: true)
+    }
+    
+    /// 安全特性示例
+    private func demonstrateSecurityFeatures() {
+        // 创建安全特性示例视图控制器
+        let securityVC = SecurityExampleViewController()
+        navigationController?.pushViewController(securityVC, animated: true)
+    }
+    
+    /// 性能监控示例
+    private func demonstratePerformanceMonitoring() {
+        // 创建性能监控示例视图控制器
+        let performanceVC = PerformanceMonitorExampleViewController()
+        navigationController?.pushViewController(performanceVC, animated: true)
+    }
+    
+    /// 环境配置管理示例
+    private func demonstrateEnvironmentManagement() {
+        // 创建环境配置管理示例视图控制器
+        let environmentVC = EnvironmentManagerExampleViewController()
+        navigationController?.pushViewController(environmentVC, animated: true)
+    }
+    
+    /// 离线处理示例
+    private func demonstrateOfflineHandling() {
+        // 创建离线处理示例视图控制器
+        let offlineVC = OfflineHandlingExampleViewController()
+        navigationController?.pushViewController(offlineVC, animated: true)
+    }
+    
+    /// 国际化示例
+    private func demonstrateLocalization() {
+        // 创建国际化示例视图控制器
+        let localizationVC = LocalizationExampleViewController()
+        navigationController?.pushViewController(localizationVC, animated: true)
+    }
+    
+    /// 可访问性示例
+    private func demonstrateAccessibility() {
+        // 创建可访问性示例视图控制器
+        let accessibilityVC = AccessibilityExampleViewController()
+        navigationController?.pushViewController(accessibilityVC, animated: true)
+    }
+    
+    /// 版本管理示例
+    private func demonstrateVersionManagement() {
+        // 创建版本管理示例视图控制器
+        let versionVC = VersionManagementExampleViewController()
+        navigationController?.pushViewController(versionVC, animated: true)
+    }
+    
     // MARK: - 原有示例方法
     
     /// 单个请求（带缓存）

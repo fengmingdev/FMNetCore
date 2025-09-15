@@ -29,6 +29,9 @@ public protocol APIRequest {
     
     /// 是否需要显示加载指示器
     var needsLoadingIndicator: Bool { get }
+    
+    /// 自定义重试策略（可选，默认使用全局策略）
+    var retryStrategy: RetryStrategy? { get }
 }
 
 /// APIRequest协议的默认实现
@@ -44,4 +47,7 @@ public extension APIRequest {
     
     /// 是否需要显示加载指示器（默认true）
     var needsLoadingIndicator: Bool { true }
+    
+    /// 自定义重试策略（可选，默认使用全局策略）
+    var retryStrategy: RetryStrategy? { return nil }
 }

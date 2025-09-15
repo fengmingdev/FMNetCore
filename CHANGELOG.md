@@ -1,67 +1,58 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project will be documented in this file.
+所有重要的修改都会记录在这个文件中。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+格式基于 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+并且这个项目遵循 [Semantic Versioning](https://semver.org/spec/v2.0.0.html)。
 
-## [Unreleased]
+## [1.0.0] - 2025-09-15
 
-### Added
-- LoadingIndicator 协议增强，添加了 willShow、didShow、willHide、didHide 回调方法
-- LoadingIndicatorConfig 结构体增强，添加了 preventDuplicateShow 和 minimumDisplayTime 配置选项
-- LoadingIndicatorManager 增强功能：
-  - 添加任务ID跟踪机制，支持精确控制加载指示器的显示和隐藏
-  - 添加 isVisible() 方法检查加载指示器是否可见
-  - 添加 getLoadingCount() 方法获取当前加载任务数量
-  - 添加 getCurrentConfig() 方法获取当前配置
-  - 添加 getAllTasks() 方法获取所有加载任务信息
-  - 添加 cancelAllLoading() 方法取消所有加载指示器
-  - 添加 cancelLoading(for:) 方法取消特定任务的加载指示器
-- LoadingIndicatorManager 性能优化：
-  - 减少不必要的 DispatchQueue 调用
-  - 优化默认加载指示器的实现，避免在非主线程执行UI操作
-  - 使用专门的UI队列处理UI更新
-  - 添加防重复显示机制
-  - 添加最小显示时间配置，防止加载指示器闪烁
-- iOS 示例应用中添加增强的自定义加载指示器示例
-- 在 README.md 和 Documentation/AdvancedUsage.md 中添加增强功能的使用说明
+### 新增
 
-### Changed
-- 重构 LoadingIndicatorManager 以支持外部自定义
-- 更新 git repository URL 到 https://github.com/fengmingdev/FMNetCore
-- iOSExample 现在使用 CocoaPods 而不是 Swift Package Manager 进行依赖管理
-- 添加 Podfile 用于 iOSExample 项目
+- 基于 Alamofire 和 Moya 构建的核心网络库
+- 支持拦截器机制
+- 支持缓存管理
+- 支持网络日志记录
+- 支持自定义重定向处理
+- 支持自定义服务器信任评估
+- 支持动态基础 URL
+- 支持 Combine 框架
+- 支持协程
+- 支持网络可达性检测
+- 支持可自定义的加载指示器管理
+- 支持 SwiftProtobuf（可选）
+- 支持 RxSwift（可选）
+- 添加智能重试机制，支持指数退避和自适应重试策略
+- 添加安全特性，支持证书锁定和客户端证书认证
+- 添加性能监控功能，支持请求性能指标收集和分析
+- 添加多环境配置管理，支持开发、测试、预发布和生产环境
+- 添加离线处理能力，支持离线请求存储和同步
+- 添加国际化支持，支持多语言错误消息和日志
+- 添加可访问性支持，支持VoiceOver和动态字体大小
+- 添加向后兼容性支持，支持API版本管理和废弃处理
+- 添加完整的测试覆盖，包括单元测试和集成测试
+- 添加详细的文档和示例代码
 
-### Deprecated
-- N/A
+### 修改
 
-### Removed
-- N/A
+- 优化网络请求处理流程
+- 改进错误处理机制
+- 增强缓存管理功能
+- 完善日志记录系统
+- 优化加载指示器管理
 
-### Fixed
-- N/A
+### 修复
 
-### Security
-- N/A
+- 修复了在网络不可达情况下的处理问题
+- 修复了弱网环境下的请求处理问题
+- 修复了缓存相关的潜在问题
+- 修复了加载指示器显示时机的问题
 
-## [1.0.0] - 2025-09-12
+## [0.1.0] - 2025-09-12
 
-### Added
-- Initial release of FMNetCore
-- NetworkManager for handling HTTP requests
-- NetworkInterceptor for custom request/response processing
-- CacheManager for caching responses
-- NetworkLogger for logging network requests and responses
-- CustomRedirectHandler for handling redirects
-- CustomServerTrustEvaluator for custom server trust evaluation
-- DynamicBaseURL for dynamic base URL support
-- Combine extensions for reactive programming
-- Coroutine support for async/await-like syntax
-- ReachabilityManager for network reachability detection
-- LoadingIndicatorManager for managing loading indicators
-- Comprehensive test suite
-- Example API requests
-- Documentation
-- Development rules documentation to avoid recurring issues
-- CocoaPods support with FMNetCore.podspec
+### 新增
+
+- 项目初始化
+- 基础网络请求功能
+- 简单的缓存机制
+- 基本的错误处理

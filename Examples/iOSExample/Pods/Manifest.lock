@@ -17,12 +17,14 @@ PODS:
     - RxSwift (= 6.9.0)
   - RxSwift (6.9.0)
   - SwiftProtobuf (1.31.0)
+  - Toast-Swift (5.1.1)
 
 DEPENDENCIES:
   - FMNetCore (from `../../`)
   - RxCocoa (~> 6.5)
   - RxSwift (~> 6.5)
   - SwiftProtobuf (~> 1.26)
+  - Toast-Swift (~> 5.0)
 
 SPEC REPOS:
   trunk:
@@ -32,6 +34,7 @@ SPEC REPOS:
     - RxRelay
     - RxSwift
     - SwiftProtobuf
+    - Toast-Swift
 
 EXTERNAL SOURCES:
   FMNetCore:
@@ -45,7 +48,8 @@ SPEC CHECKSUMS:
   RxRelay: 6b0c930e5cef57d5fe2032571e5e65b78e3cbdb1
   RxSwift: 31649ace6aceeb422e16ff71c60804f9c3281ed9
   SwiftProtobuf: caa61117d9a5eeb60a52375f6685991a1fd4bd7b
+  Toast-Swift: 7a03a532afe3a560d4044bc7c237e2864d295173
 
-PODFILE CHECKSUM: 2ac6ff47532143a9b3ff1155670ed1344e6016a2
+PODFILE CHECKSUM: feb7f3f96fb38e55d4c97038541ef0e850fe8183
 
 COCOAPODS: 1.16.2
