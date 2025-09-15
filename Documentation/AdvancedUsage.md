@@ -124,7 +124,7 @@ ReachabilityManager.shared.$networkStatus
 
 ## 加载指示器
 
-FMNetCore 支持自动显示和隐藏加载指示器。
+FMNetCore 支持自动显示和隐藏加载指示器，并且支持外部自定义。
 
 ### 配置加载指示器
 
@@ -132,6 +132,8 @@ FMNetCore 支持自动显示和隐藏加载指示器。
 let loadingConfig = LoadingIndicatorConfig()
 loadingConfig.showDelay = 0.5  // 0.5秒后显示加载指示器
 loadingConfig.hideDelay = 0.3  // 0.3秒后隐藏加载指示器
+loadingConfig.preventDuplicateShow = true  // 防止重复显示
+loadingConfig.minimumDisplayTime = 0.1  // 最小显示时间，防止闪烁
 
 LoadingIndicatorManager.shared.configure(with: loadingConfig)
 ```
@@ -144,14 +146,111 @@ LoadingIndicatorManager.shared.configure(with: loadingConfig)
 class CustomLoadingIndicator: LoadingIndicator {
     func show() {
         // 显示自定义加载指示器
+        // 例如，使用MBProgressHUD、SVProgressHUD等第三方库
+        DispatchQueue.main.async {
+            // 在主线程中显示您的自定义加载视图
+        }
     }
     
     func hide() {
         // 隐藏自定义加载指示器
+        DispatchQueue.main.async {
+            // 在主线程中隐藏您的自定义加载视图
+        }
+    }
+    
+    // 可选的生命周期回调方法
+    func willShow() async {
+        // 加载指示器将要显示时调用
+        print("Loading indicator will show")
+    }
+    
+    func didShow() async {
+        // 加载指示器已经显示时调用
+        print("Loading indicator did show")
+    }
+    
+    func willHide() async {
+        // 加载指示器将要隐藏时调用
+        print("Loading indicator will hide")
+    }
+    
+    func didHide() async {
+        // 加载指示器已经隐藏时调用
+        print("Loading indicator did hide")
     }
 }
 
 LoadingIndicatorManager.shared.setIndicator(CustomLoadingIndicator())
+```
+
+### 使用Toast-Swift库的加载指示器
+
+如果您想使用Toast-Swift库来显示加载指示器，可以这样实现：
+
+```swift
+import Toast_Swift
+
+class ToastLoadingIndicator: LoadingIndicator {
+    func show() {
+        DispatchQueue.main.async {
+            guard let window = UIApplication.shared.keyWindow else { return }
+            
+            // 使用Toast-Swift显示加载提示
+            window.makeToastActivity(.center)
+        }
+    }
+    
+    func hide() {
+        DispatchQueue.main.async {
+            guard let window = UIApplication.shared.keyWindow else { return }
+            
+            // 隐藏Toast-Swift加载提示
+            window.hideToastActivity()
+        }
+    }
+    
+    // 实现可选的生命周期回调方法
+    func willShow() async {
+        print("ToastLoadingIndicator will show")
+    }
+    
+    func didShow() async {
+        print("ToastLoadingIndicator did show")
+    }
+    
+    func willHide() async {
+        print("ToastLoadingIndicator will hide")
+    }
+    
+    func didHide() async {
+        print("ToastLoadingIndicator did hide")
+    }
+}
+
+// 设置Toast-Swift加载指示器
+LoadingIndicatorManager.shared.setIndicator(ToastLoadingIndicator())
+```
+
+### 加载指示器管理功能
+
+LoadingIndicatorManager 提供了丰富的管理功能：
+
+```swift
+// 检查加载指示器是否可见
+let isVisible = LoadingIndicatorManager.shared.isVisible()
+
+// 获取当前加载任务数量
+let loadingCount = LoadingIndicatorManager.shared.getLoadingCount()
+
+// 获取当前配置
+let config = LoadingIndicatorManager.shared.getCurrentConfig()
+
+// 获取所有加载任务信息
+let tasks = LoadingIndicatorManager.shared.getAllTasks()
+
+// 取消所有加载指示器
+LoadingIndicatorManager.shared.cancelAllLoading()
 ```
 
 ## 协程支持

@@ -44,7 +44,8 @@ extension NetworkManager {
             .delay(for: 0.5, scheduler: DispatchQueue.main)
             .handleEvents(receiveOutput: {
                 if needsLoading {
-                    LoadingIndicatorManager.shared.showLoading()
+                    // 显示加载指示器并保存任务ID
+                    let _ = LoadingIndicatorManager.shared.showLoading()
                 }
             })
             .eraseToAnyPublisher()
@@ -124,7 +125,8 @@ extension NetworkManager {
             .delay(for: 0.5, scheduler: DispatchQueue.main)
             .handleEvents(receiveOutput: {
                 if needsLoading {
-                    LoadingIndicatorManager.shared.showLoading()
+                    // 显示加载指示器并保存任务ID
+                    let _ = LoadingIndicatorManager.shared.showLoading()
                 }
             })
             .eraseToAnyPublisher()

@@ -12,6 +12,9 @@ target 'iOSExample' do
   pod 'RxSwift', '~> 6.5'
   pod 'RxCocoa', '~> 6.5'
   
+  # 添加Toast-Swift用于自定义加载指示器示例
+  pod 'Toast-Swift', '~> 5.0'
+  
   # 如果需要发布到公共仓库，可以使用以下方式：
   # pod 'FMNetCore', :git => 'https://github.com/fengmingdev/FMNetCore.git', :branch => 'main'
   

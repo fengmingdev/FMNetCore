@@ -8,18 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- SwiftProtobuf 支持，包括 ProtobufAPIRequest 协议和 ProtobufResponseHandler
-- RxSwift 支持，包括 rxRequest、rxRequestWithLoading、rxCombinedRequest 等扩展方法
-- ProtobufSupport.swift 文件提供 Protobuf 相关功能
-- RxSwiftSupport.swift 文件提供 RxSwift 相关功能
-- iOS 示例应用中添加 Protobuf 和 RxSwift 示例文件
-- 在 Package.swift 中添加 SwiftProtobuf 和 RxSwift 依赖
-- 在 FMNetCore.podspec 中添加 SwiftProtobuf 和 RxSwift 依赖
-- 在 Examples/iOSExample/Podfile 中添加 SwiftProtobuf 和 RxSwift 依赖
-- 在 FMNetCore.swift 中添加条件导入 SwiftProtobuf 和 RxSwift
-- 在 README.md 中添加 SwiftProtobuf 和 RxSwift 使用说明
+- LoadingIndicator 协议增强，添加了 willShow、didShow、willHide、didHide 回调方法
+- LoadingIndicatorConfig 结构体增强，添加了 preventDuplicateShow 和 minimumDisplayTime 配置选项
+- LoadingIndicatorManager 增强功能：
+  - 添加任务ID跟踪机制，支持精确控制加载指示器的显示和隐藏
+  - 添加 isVisible() 方法检查加载指示器是否可见
+  - 添加 getLoadingCount() 方法获取当前加载任务数量
+  - 添加 getCurrentConfig() 方法获取当前配置
+  - 添加 getAllTasks() 方法获取所有加载任务信息
+  - 添加 cancelAllLoading() 方法取消所有加载指示器
+  - 添加 cancelLoading(for:) 方法取消特定任务的加载指示器
+- LoadingIndicatorManager 性能优化：
+  - 减少不必要的 DispatchQueue 调用
+  - 优化默认加载指示器的实现，避免在非主线程执行UI操作
+  - 使用专门的UI队列处理UI更新
+  - 添加防重复显示机制
+  - 添加最小显示时间配置，防止加载指示器闪烁
+- iOS 示例应用中添加增强的自定义加载指示器示例
+- 在 README.md 和 Documentation/AdvancedUsage.md 中添加增强功能的使用说明
 
 ### Changed
+- 重构 LoadingIndicatorManager 以支持外部自定义
 - 更新 git repository URL 到 https://github.com/fengmingdev/FMNetCore
 - iOSExample 现在使用 CocoaPods 而不是 Swift Package Manager 进行依赖管理
 - 添加 Podfile 用于 iOSExample 项目

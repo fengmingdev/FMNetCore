@@ -153,6 +153,16 @@ class NetworkExamplesViewController: UIViewController {
                 title: "重定向处理示例",
                 description: "演示如何处理HTTP重定向",
                 action: demonstrateRedirectHandling
+            ),
+            Example(
+                title: "自定义加载指示器",
+                description: "演示如何自定义加载指示器样式",
+                action: demonstrateCustomLoadingIndicator
+            ),
+            Example(
+                title: "Toast-Swift加载指示器",
+                description: "演示使用Toast-Swift库的自定义加载指示器",
+                action: demonstrateToastSwiftLoadingIndicator
             )
         ]
     }
@@ -306,6 +316,149 @@ class NetworkExamplesViewController: UIViewController {
         showAlert(title: "重定向处理", message: "已配置重定向设置: 允许=\(config.allowRedirects), 最大次数=\(config.maxRedirects)")
     }
     
+    /// 自定义加载指示器示例
+    private func demonstrateCustomLoadingIndicator() {
+        // 配置自定义加载指示器
+        let config = LoadingIndicatorConfig(showDelay: 0.2, hideDelay: 0.1)
+        LoadingIndicatorManager.shared.configure(with: config)
+        
+        // 创建一个自定义的加载指示器（简单的文本提示）
+        class TextLoadingIndicator: LoadingIndicator {
+            func show() {
+                guard Thread.isMainThread else {
+                    DispatchQueue.main.async {
+                        self.show()
+                    }
+                    return
+                }
+                
+                guard let window = UIApplication.shared.keyWindow else { return }
+                
+                // 创建提示标签
+                let label = UILabel()
+                label.text = "正在加载..."
+                label.textColor = .white
+                label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+                label.textAlignment = .center
+                label.layer.cornerRadius = 8
+                label.clipsToBounds = true
+                label.translatesAutoresizingMaskIntoConstraints = false
+                label.tag = 888888
+                
+                // 避免重复添加
+                if window.viewWithTag(888888) != nil {
+                    return
+                }
+                
+                window.addSubview(label)
+                
+                NSLayoutConstraint.activate([
+                    label.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+                    label.centerYAnchor.constraint(equalTo: window.centerYAnchor),
+                    label.widthAnchor.constraint(equalToConstant: 120),
+                    label.heightAnchor.constraint(equalToConstant: 40)
+                ])
+            }
+            
+            func hide() {
+                guard Thread.isMainThread else {
+                    DispatchQueue.main.async {
+                        self.hide()
+                    }
+                    return
+                }
+                
+                guard let window = UIApplication.shared.keyWindow else { return }
+                window.viewWithTag(888888)?.removeFromSuperview()
+            }
+            
+            func willShow() {
+                print("TextLoadingIndicator will show")
+            }
+            
+            func didShow() {
+                print("TextLoadingIndicator did show")
+            }
+            
+            func willHide() {
+                print("TextLoadingIndicator will hide")
+            }
+            
+            func didHide() {
+                print("TextLoadingIndicator did hide")
+            }
+        }
+        
+        // 设置自定义加载指示器
+        LoadingIndicatorManager.shared.setIndicator(TextLoadingIndicator())
+        
+        // 发送一个需要显示加载指示器的请求
+        let request = GetUserRequest(userId: 1)
+        
+        showAlert(title: "自定义加载指示器", message: "正在使用自定义加载指示器获取用户信息...")
+        
+        NetworkManager.shared.requestWithLoading(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成，使用了自定义加载指示器")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                    
+                    // 恢复默认加载指示器
+                    LoadingIndicatorManager.shared.setIndicator(DefaultLoadingIndicator())
+                },
+                receiveValue: { [weak self] (user: User) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)\n使用了自定义加载指示器")
+                    }
+                }
+            )
+            .store(in: &self.cancellables)
+    }
+    
+    /// Toast-Swift加载指示器示例
+    private func demonstrateToastSwiftLoadingIndicator() {
+        #if canImport(Toast_Swift)
+        // 配置Toast-Swift加载指示器
+        LoadingIndicatorConfigurationExample.configureToastLoadingIndicator()
+        
+        // 发送一个需要显示加载指示器的请求
+        let request = GetUserRequest(userId: 1)
+        
+        showAlert(title: "Toast-Swift加载指示器", message: "正在使用Toast-Swift加载指示器获取用户信息...")
+        
+        NetworkManager.shared.requestWithLoading(request)
+            .sink(
+                receiveCompletion: { [weak self] (completion: Subscribers.Completion<NetworkError>) in
+                    DispatchQueue.main.async {
+                        switch completion {
+                        case .finished:
+                            self?.showAlert(title: "完成", message: "请求已完成，使用了Toast-Swift加载指示器")
+                        case .failure(let error):
+                            self?.showAlert(title: "失败", message: "错误: \(error.localizedDescription)")
+                        }
+                    }
+                    
+                    // 恢复默认加载指示器
+                    LoadingIndicatorManager.shared.setIndicator(DefaultLoadingIndicator())
+                },
+                receiveValue: { [weak self] (user: User) in
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "成功", message: "用户名: \(user.name)\n邮箱: \(user.email)\n使用了Toast-Swift加载指示器")
+                    }
+                }
+            )
+            .store(in: &self.cancellables)
+        #else
+        showAlert(title: "依赖缺失", message: "Toast-Swift库未找到，请确保已安装该依赖")
+        #endif
+    }
+
     // MARK: - 原有示例方法
     
     /// 单个请求（带缓存）

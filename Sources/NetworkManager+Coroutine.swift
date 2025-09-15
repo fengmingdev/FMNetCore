@@ -128,7 +128,8 @@ extension NetworkManager {
             loadingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
                 DispatchQueue.main.async {
                     #if canImport(UIKit)
-                    LoadingIndicatorManager.shared.showLoading()
+                    // 显示加载指示器并保存任务ID
+                    let _ = LoadingIndicatorManager.shared.showLoading()
                     #endif
                 }
             }
@@ -256,7 +257,8 @@ extension NetworkManager {
             // 延迟0.5秒显示加载视图
             loadingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
                 DispatchQueue.main.async {
-                    LoadingIndicatorManager.shared.showLoading()
+                    // 显示加载指示器并保存任务ID
+                    let _ = LoadingIndicatorManager.shared.showLoading()
                 }
             }
         }
